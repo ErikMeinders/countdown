@@ -10,6 +10,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no, maximum-scale=1">
 
 <meta name="theme-color" content="#080a12">
+<meta name="color-scheme" content="dark">
 <meta name="description" content="The Countdown numbers round.">
 
 <!-- Standalone launch (no Safari chrome) -->
@@ -44,6 +45,15 @@
     -webkit-tap-highlight-color: transparent;
     /* Removes the 300ms click delay and suppresses double-tap zoom. */
     touch-action: manipulation;
+  }
+
+  button {
+    -webkit-appearance: none;
+    appearance: none;
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-touch-callout: none;
+    touch-action: manipulation;
+    background-clip: padding-box;
   }
 
   /* Keep the UI clear of the notch and the home indicator. */

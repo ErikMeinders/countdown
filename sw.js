@@ -1,5 +1,5 @@
 // Bump CACHE when you redeploy — the old cache is then dropped on activate.
-const CACHE = "countdown-v2";
+const CACHE = "countdown-v14";
 const ASSETS = [
   "./", "./index.html", "./app.js", "./manifest.json",
   "./icon-180.png", "./icon-192.png", "./icon-512.png",
