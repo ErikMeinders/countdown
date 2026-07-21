@@ -1,0 +1,36 @@
+name: Deploy to GitHub Pages
+
+# Only needed if you set Settings -> Pages -> Source to "GitHub Actions".
+# If you chose "Deploy from a branch" instead, this file is harmless and idle.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # The site is prebuilt and lives at the repo root, so this just
+      # uploads the checkout as-is. No node, no build step.
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4
