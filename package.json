@@ -1,0 +1,26 @@
+{
+  "name": "countdown",
+  "version": "1.0.0",
+  "private": true,
+  "description": "The Countdown numbers round as an installable web app.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "tone": "^15.0.4"
+  },
+  "devDependencies": {
+    "@testing-library/react": "^16.1.0",
+    "@vitejs/plugin-react": "^6.0.4",
+    "jsdom": "^25.0.1",
+    "vite": "^8.1.5",
+    "vitest": "^4.1.10"
+  }
+}

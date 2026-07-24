@@ -1,11 +1,12 @@
 name: Deploy to GitHub Pages
 
-# Only needed if you set Settings -> Pages -> Source to "GitHub Actions".
-# If you chose "Deploy from a branch" instead, this file is harmless and idle.
+# Requires Settings -> Pages -> Source: "GitHub Actions". The repo holds source
+# only; the site that gets published is built here.
 
 on:
   push:
     branches: [main]
+  pull_request:
   workflow_dispatch:
 
 permissions:
@@ -18,19 +19,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  # Pull requests are built and tested by the job above; only main publishes.
   deploy:
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - uses: actions/checkout@v4
-
-      # The site is prebuilt and lives at the repo root, so this just
-      # uploads the checkout as-is. No node, no build step.
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: .
       - id: deployment
         uses: actions/deploy-pages@v4

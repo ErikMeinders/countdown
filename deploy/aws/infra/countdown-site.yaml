@@ -1,0 +1,142 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Static hosting for the Countdown PWA. Private S3 origin fronted by CloudFront
+  with Origin Access Control. HTTPS comes free with the default CloudFront
+  certificate, which is what makes the app installable to the iOS home screen.
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: Globally unique bucket name (leave blank to auto-name).
+    Default: ''
+
+Conditions:
+  AutoName: !Equals [!Ref BucketName, '']
+
+Resources:
+
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !If
+        - AutoName
+        - !Sub 'countdown-pwa-${AWS::AccountId}-${AWS::Region}'
+        - !Ref BucketName
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      OwnershipControls:
+        Rules:
+          - ObjectOwnership: BucketOwnerEnforced
+
+  # Only this distribution may read the bucket.
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Sid: AllowCloudFrontRead
+            Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${SiteBucket.Arn}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:${AWS::Partition}:cloudfront::${AWS::AccountId}:distribution/${Distribution}'
+
+  OriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${AWS::StackName}-oac'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  # Sets the headers a PWA wants and a few sensible security ones.
+  ResponseHeaders:
+    Type: AWS::CloudFront::ResponseHeadersPolicy
+    Properties:
+      ResponseHeadersPolicyConfig:
+        Name: !Sub '${AWS::StackName}-headers'
+        SecurityHeadersConfig:
+          ContentTypeOptions:
+            Override: true
+          FrameOptions:
+            FrameOption: DENY
+            Override: true
+          ReferrerPolicy:
+            ReferrerPolicy: same-origin
+            Override: true
+          StrictTransportSecurity:
+            AccessControlMaxAgeSec: 31536000
+            IncludeSubdomains: true
+            Override: true
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: Countdown PWA
+        DefaultRootObject: index.html
+        HttpVersion: http2and3
+        IPV6Enabled: true
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: s3origin
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt OriginAccessControl.Id
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: s3origin
+          ViewerProtocolPolicy: redirect-to-https
+          Compress: true
+          AllowedMethods: [GET, HEAD, OPTIONS]
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6      # CachingOptimized
+          ResponseHeadersPolicyId: !Ref ResponseHeaders
+        CacheBehaviors:
+          # The service worker and shell must never be served stale, or a
+          # redeploy will not reach devices that already installed the app.
+          - PathPattern: /sw.js
+            TargetOriginId: s3origin
+            ViewerProtocolPolicy: redirect-to-https
+            Compress: true
+            AllowedMethods: [GET, HEAD, OPTIONS]
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad    # CachingDisabled
+            ResponseHeadersPolicyId: !Ref ResponseHeaders
+          - PathPattern: /index.html
+            TargetOriginId: s3origin
+            ViewerProtocolPolicy: redirect-to-https
+            Compress: true
+            AllowedMethods: [GET, HEAD, OPTIONS]
+            CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad
+            ResponseHeadersPolicyId: !Ref ResponseHeaders
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
+Outputs:
+  BucketName:
+    Description: Sync the site/ directory here.
+    Value: !Ref SiteBucket
+  DistributionId:
+    Description: Use for cache invalidations.
+    Value: !Ref Distribution
+  URL:
+    Description: Open this in Safari, then Share -> Add to Home Screen.
+    Value: !Sub 'https://${Distribution.DomainName}'
