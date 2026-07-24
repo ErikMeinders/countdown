@@ -1,9 +1,8 @@
-// Bump CACHE when you redeploy — the old cache is then dropped on activate.
-const CACHE = "countdown-v3";
-const ASSETS = [
-  "./", "./index.html", "./app.js", "./manifest.json",
-  "./icon-180.png", "./icon-192.png", "./icon-512.png",
-];
+// Service worker template. The two placeholders below are substituted at build
+// time by the serviceWorker plugin in vite.config.js, which reads the finished
+// dist/ to fill them in. Edit this file, never the generated dist/sw.js.
+const CACHE = "%CACHE%";
+const ASSETS = %ASSETS%;
 
 self.addEventListener("install", (e) => {
   e.waitUntil(

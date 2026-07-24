@@ -1,0 +1,45 @@
+/* Keyframes and the handful of global rules the inline styles can't express.
+   The fonts are loaded by the <link> in index.html, not by an @import here —
+   an @import blocks rendering until it resolves. */
+
+@keyframes beat { 0%,100% { transform: scale(1) } 50% { transform: scale(1.045) } }
+
+@keyframes phaseEnterFwd  { from { opacity:0; transform: translateY(20px) scale(.98) } to { opacity:1; transform:none } }
+@keyframes phaseExitFwd   { from { opacity:1; transform:none } to { opacity:0; transform: translateY(-16px) scale(.98) } }
+@keyframes phaseEnterBack { from { opacity:0; transform: translateY(-20px) scale(.98) } to { opacity:1; transform:none } }
+@keyframes phaseExitBack  { from { opacity:1; transform:none } to { opacity:0; transform: translateY(16px) scale(.98) } }
+
+@keyframes popIn { from { opacity:0; transform:scale(0.82) } to { opacity:1; transform:scale(1) } }
+@keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+
+/* Literal copy of T.goldGlow in theme.js — keep the two in step. */
+@keyframes shimmer { 0%,100% { box-shadow: 0 0 22px rgba(242,209,107,0.35) } 50% { box-shadow: 0 0 52px rgba(242,209,107,0.35) } }
+
+@keyframes phaseIn {
+  from { opacity: 0; transform: translateY(14px) scale(0.978); filter: blur(3px); }
+  to   { opacity: 1; transform: none;                          filter: blur(0);   }
+}
+@keyframes phaseOut {
+  from { opacity: 1; transform: none;                            filter: blur(0);   }
+  to   { opacity: 0; transform: translateY(-10px) scale(0.978);  filter: blur(3px); }
+}
+@keyframes riseIn {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.stagger > * { animation: riseIn 0.5s cubic-bezier(.19,.9,.28,1) backwards; }
+.stagger > *:nth-child(1) { animation-delay: 0.05s }
+.stagger > *:nth-child(2) { animation-delay: 0.11s }
+.stagger > *:nth-child(3) { animation-delay: 0.17s }
+.stagger > *:nth-child(4) { animation-delay: 0.23s }
+.stagger > *:nth-child(5) { animation-delay: 0.29s }
+.stagger > *:nth-child(6) { animation-delay: 0.35s }
+.stagger > *:nth-child(7) { animation-delay: 0.41s }
+
+button { -webkit-tap-highlight-color: transparent; }
+button:active:not(:disabled) { transform: scale(0.94); }
+
+@media (prefers-reduced-motion: reduce) {
+  .stagger > *, .phase { animation: none !important; }
+}
