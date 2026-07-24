@@ -22,14 +22,15 @@ All notable changes to this project are documented here. The format follows
 - Softer stop: travel extended from 76% to 84% of the animation, the rock
   halved, and reels run 1700–2220 ms rather than 1450–1950 ms.
 - The mute control is a drawn SVG rather than 🔊/🔇, which arrive in full
-  colour on iOS and at a different weight on every platform. It wears the same
-  recessed reel face as the target spinner, so the speaker sits behind the
-  glass like a numeral.
+  colour on iOS and at a different weight on every platform.
 - Both round-length buttons share one treatment; they previously ran the same
   gradient in opposite directions, which read as decoration standing in for a
   distinction.
 - Decorative glow trimmed. Shadows now mean something: cyan lift on primary
   actions, gold for what you've selected, and the urgency glow on the clock.
+- New app icon: the target spinner itself — three recessed reel windows
+  showing a target, on the app's background gradient. Generated from
+  `tools/make-icons.py`, so it can be regenerated rather than hand-drawn.
 
 ## [1.1.0] — 2026-07-24
 

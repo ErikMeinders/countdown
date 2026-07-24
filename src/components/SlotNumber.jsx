@@ -16,21 +16,14 @@ const EASE = `cubic-bezier(${REEL_EASE.join(",")})`;
 // reels.js, because the rattle has to follow exactly the same curve.
 
 // The window each digit sits in. Dark and recessed, so the numerals read as
-// lit faces behind glass rather than text floating on the panel. Exported so
-// the mute control can wear the same face.
-export const reelFaceStyle = {
+// lit faces behind glass rather than text floating on the panel.
+const reelFaceStyle = {
   background: "rgba(0,2,7,0.96)",
   border: "1px solid rgba(255,255,255,0.2)",
   borderRadius: 3,
   boxShadow: "inset 0 0 18px rgba(0,0,0,0.8)",
   boxSizing: "border-box",
 };
-
-// The lip fade that sells the "behind glass" look, over whatever the window
-// holds.
-export const REEL_FADE = `linear-gradient(180deg,
-  rgba(10,13,22,0.95) 0%, rgba(10,13,22,0) 26%,
-  rgba(10,13,22,0) 74%, rgba(10,13,22,0.95) 100%)`;
 
 // Shared by the spinning reel and the settled number, so the faces don't
 // change appearance the moment the reels stop.
@@ -45,7 +38,9 @@ function ReelFace({ children }) {
       {/* Fades the numerals out at the lip of the window. */}
       <div style={{
         position: "absolute", inset: 0, pointerEvents: "none",
-        background: REEL_FADE,
+        background: `linear-gradient(180deg,
+          rgba(10,13,22,0.95) 0%, rgba(10,13,22,0) 26%,
+          rgba(10,13,22,0) 74%, rgba(10,13,22,0.95) 100%)`,
       }} />
     </div>
   );
