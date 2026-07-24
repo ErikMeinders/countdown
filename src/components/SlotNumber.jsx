@@ -1,15 +1,19 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { T } from "../theme.js";
 import { REEL_START_MS } from "../constants.js";
+import {
+  REEL_CELL, REEL_EASE, REEL_LOOPS, REEL_WIDTH,
+  reelDelay, reelDuration,
+} from "../reels.js";
+
+const EASE = `cubic-bezier(${REEL_EASE.join(",")})`;
 
 // ── Slot reels ─────────────────────────────────────────────────
 // Each digit is a tall strip of numerals inside a fixed window. The strip
 // starts at the top and animates to the cell holding the final digit, so the
 // numerals blur past and decelerate into place. Reels are staggered and land
-// left to right, the way a fruit machine settles.
-export const REEL_CELL = 58;
-const REEL_WIDTH = 36;
-const REEL_LOOPS = 5;
+// left to right, the way a fruit machine settles. The motion itself lives in
+// reels.js, because the rattle has to follow exactly the same curve.
 
 // The window each digit sits in. Dark and recessed, so the numerals read as
 // lit faces behind glass rather than text floating on the panel.
@@ -75,7 +79,7 @@ function SlotDigit({ digit, delay, duration, onStop }) {
           // only ease to a stop.
           "--reel-end": `${-finalIdx * REEL_CELL}px`,
           animation: go
-            ? `reelSettle ${duration}ms cubic-bezier(.12,.62,.2,1) ${delay}ms both`
+            ? `reelSettle ${duration}ms ${EASE} ${delay}ms both`
             : "none",
           filter: spinning ? "blur(0.5px)" : "none",
           willChange: "transform",
@@ -103,10 +107,9 @@ export function SlotNumber({ value, onSettle }) {
   };
 
   // Safety net: if an animationend is ever missed (backgrounded tab, reduced
-  // motion overriding the animation) the clock still starts. Must outlast the
-  // longest reel: REEL_START_MS + 2*220 delay + 1450 + 2*250 duration.
+  // motion overriding the animation) the clock still starts.
   useEffect(() => {
-    const id = setTimeout(finish, 7200);
+    const id = setTimeout(finish, REEL_START_MS + reelDuration(2) + reelDelay(2) + 900);
     return () => clearTimeout(id);
   }, []);
 
@@ -121,8 +124,8 @@ export function SlotNumber({ value, onSettle }) {
         <SlotDigit
           key={i}
           digit={d}
-          delay={REEL_START_MS + i * 220}
-          duration={1450 + i * 250}
+          delay={REEL_START_MS + reelDelay(i)}
+          duration={reelDuration(i)}
           onStop={i === digits.length - 1 ? finish : undefined}
         />
       ))}

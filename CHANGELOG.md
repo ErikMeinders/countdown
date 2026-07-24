@@ -4,6 +4,31 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning is
 [semantic](https://semver.org/).
 
+## [1.2.0] — 2026-07-24
+
+### Added
+
+- `src/reels.js` — one description of the reel motion, which both the
+  animation and the rattle are derived from. `test/reels.test.js` fails if the
+  keyframes and the model drift apart.
+
+### Changed
+
+- The reels rattle once per numeral passing the window, on the curve the strip
+  is actually following: 153 clicks fusing into a buzz at 250/s and separating
+  into individual ticks at 2.3/s as it slows. Each click's level follows its
+  gap, so the rattle thins and firms up together. Previously the clicks were a
+  gap multiplied by a constant, unconnected to the animation.
+- Softer stop: travel extended from 76% to 84% of the animation, the rock
+  halved, and reels run 1700–2220 ms rather than 1450–1950 ms.
+- The mute control is a drawn SVG rather than 🔊/🔇, which arrive in full
+  colour on iOS and at a different weight on every platform.
+- Both round-length buttons share one treatment; they previously ran the same
+  gradient in opposite directions, which read as decoration standing in for a
+  distinction.
+- Decorative glow trimmed. Shadows now mean something: cyan lift on primary
+  actions, gold for what you've selected, and the urgency glow on the clock.
+
 ## [1.1.0] — 2026-07-24
 
 Restores an audio and visual pass that was made in a parallel Codex session on

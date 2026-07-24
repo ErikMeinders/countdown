@@ -1,5 +1,7 @@
 import * as Tone from "tone";
 
+import { reelCrossings, reelLanding } from "./reels.js";
+
 // ── Sound Engine ───────────────────────────────────────────────
 // Warm, acoustic-leaning palette: filtered noise clicks, struck bells,
 // felt-damped low pulses. No square waves, no chiptune.
@@ -129,45 +131,46 @@ export const Sound = (() => {
     }
   }
 
-  // Three reels of decelerating mechanical clicks, each ending on a clunk.
-  // Timings mirror the CSS delays/durations in SlotNumber.
+  // One click per numeral passing the window, on all three reels. The times
+  // come from reels.js, which is also what drives the animation — so the
+  // rattle is the strip crossing cells rather than a rhythm that resembles it.
   function reels() {
     if (off()) return;
     const now = Tone.now();
     const oldTock = tock.volume.value;
     tock.volume.value = -18;
 
-    // The reels overlap in time, but `tock` is a single monophonic voice and
-    // Tone rejects any event scheduled before the previous one. So gather
-    // every click from all three reels first, then play them in time order.
+    // The reels overlap, but `tock` is a single monophonic voice and Tone
+    // rejects an event scheduled before the previous one. So gather every
+    // click from all three reels first, then play them in time order.
     const clicks = [];
-    for (let r = 0; r < 3; r++) {
-      const start = r * 0.20;
-      const dur = 0.9 + r * 0.22;
-      let t = 0, gap = 0.028;
-      while (t < dur) {
-        clicks.push(start + t);
-        t += gap;
-        gap *= 1.075;                   // slows as the reel loses momentum
-      }
+    for (let i = 0; i < 3; i++) {
+      const times = reelCrossings(i);
+      times.forEach((at, k) => {
+        // A click on its own carries further than one inside a buzz, so the
+        // rattle thins out and firms up together as the reel slows.
+        const gap = k === 0 ? 0.02 : at - times[k - 1];
+        clicks.push({ at, velocity: Math.min(0.88, 0.5 + gap * 0.85) });
+      });
     }
-    clicks.sort((a, b) => a - b);
+    clicks.sort((a, b) => a.at - b.at);
 
     let last = -1;
-    for (const c of clicks) {
-      const at = Math.max(c, last + 0.004);   // keep them strictly increasing
-      tock.triggerAttackRelease("64n", now + at, 0.72);
-      last = at;
+    for (const { at, velocity } of clicks) {
+      const t = Math.max(at, last + 0.004);   // keep them strictly increasing
+      tock.triggerAttackRelease("64n", now + t, velocity);
+      last = t;
     }
 
     // Each reel lands on a click, not a drum. The pitched sub hits that
     // used to be here were the loudest thing in the app.
-    for (const at of [1.45, 1.92, 2.39]) {
-      tile.triggerAttackRelease("32n", now + at, 0.7);
+    for (let i = 0; i < 3; i++) {
+      tile.triggerAttackRelease("32n", now + reelLanding(i), 0.7);
     }
 
     // Restore the pendulum's level once the reels are done.
-    setTimeout(() => { if (ready) tock.volume.value = oldTock; }, 2000);
+    setTimeout(() => { if (ready) tock.volume.value = oldTock; },
+      (reelLanding(2) + 0.6) * 1000);
   }
 
   function timeUp() {

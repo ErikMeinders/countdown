@@ -20,6 +20,7 @@ import { StepColumn } from "./components/StepColumn.jsx";
 import { StepList } from "./components/StepList.jsx";
 import { TargetPanel } from "./components/TargetPanel.jsx";
 import { StaticNumber } from "./components/SlotNumber.jsx";
+import { SoundToggle } from "./components/SoundToggle.jsx";
 
 // ── Main Game ──────────────────────────────────────────────────
 export default function CountdownGame() {
@@ -331,21 +332,10 @@ export default function CountdownGame() {
           fontFamily: T.mono, fontSize: 9.5, letterSpacing: 4,
           color: T.muted, marginTop: 3,
         }}>NUMBERS ROUND</div>
-        <button
-          onClick={() => { const n = !muted; setMuted(n); Sound.setMuted(n); }}
-          style={{
-            position: "absolute", top: -2, right: 0,
-            width: 34, height: 34, borderRadius: T.r.md,
-            border: `1px solid ${T.panelBorder}`,
-            background: "transparent",
-            color: muted ? T.dim : T.mutedLight,
-            fontSize: 15, cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-          aria-label={muted ? "Unmute" : "Mute"}
-        >
-          {muted ? "🔇" : "🔊"}
-        </button>
+        <SoundToggle
+          muted={muted}
+          onToggle={() => { const n = !muted; setMuted(n); Sound.setMuted(n); }}
+        />
       </div>
 
       {/* Animated phase container */}
@@ -428,7 +418,7 @@ export default function CountdownGame() {
           </div>
 
           <div style={{ display: "flex", gap: T.gap.md, width: "100%" }}>
-            {ROUND_LENGTHS.map((len, i) => (
+            {ROUND_LENGTHS.map((len) => (
               <button
                 key={len}
                 onClick={() => startGame(len)}
@@ -437,13 +427,11 @@ export default function CountdownGame() {
                   padding: "14px 8px",
                   borderRadius: T.r.lg,
                   border: "none",
-                  background: i === 0
-                    ? `linear-gradient(135deg, ${T.cyan}, ${T.violet})`
-                    : `linear-gradient(135deg, ${T.violet}, ${T.cyan})`,
+                  background: `linear-gradient(140deg, ${T.cyan}, ${T.violet})`,
                   color: "#08101a",
                   cursor: "pointer",
                   fontFamily: T.sans,
-                  boxShadow: `0 6px 26px ${i === 0 ? T.cyanGlow : "rgba(139,127,212,0.2)"}`,
+                  boxShadow: `0 4px 16px ${T.cyanGlow}`,
                   display: "flex", flexDirection: "column",
                   alignItems: "center", gap: 1,
                   transition: "transform 0.1s",

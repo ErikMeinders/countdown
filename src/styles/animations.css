@@ -16,13 +16,17 @@
 @keyframes shimmer { 0%,100% { box-shadow: 0 0 22px rgba(244,212,111,0.36) } 50% { box-shadow: 0 0 52px rgba(244,212,111,0.36) } }
 
 /* The reels overshoot and rock into place rather than easing to a stop.
-   --reel-end is set per digit by SlotDigit. */
+   --reel-end is set per digit by SlotDigit.
+
+   The 84% is REEL_TRAVEL in reels.js, which is what the rattle is timed
+   against — reels.test.js fails if the two drift apart. The travel now runs
+   longer and the rock is half what it was, so the last few numerals crawl
+   past instead of the strip snapping to a halt. */
 @keyframes reelSettle {
   0%   { transform: translateY(0) }
-  76%  { transform: translateY(var(--reel-end)) }
-  84%  { transform: translateY(calc(var(--reel-end) - 8px)) }
-  90%  { transform: translateY(calc(var(--reel-end) + 5px)) }
-  95%  { transform: translateY(calc(var(--reel-end) - 2px)) }
+  84%  { transform: translateY(var(--reel-end)) }
+  91%  { transform: translateY(calc(var(--reel-end) - 4px)) }
+  96%  { transform: translateY(calc(var(--reel-end) + 2px)) }
   100% { transform: translateY(var(--reel-end)) }
 }
 

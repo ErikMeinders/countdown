@@ -56,6 +56,8 @@ export const primaryBtn = {
   letterSpacing: 2,
   textTransform: "uppercase",
   cursor: "pointer",
-  boxShadow: `0 6px 28px ${T.cyanGlow}`,
+  // Enough to lift it off the panel; a wider glow starts to look like the
+  // button is the light source.
+  boxShadow: `0 4px 18px ${T.cyanGlow}`,
   transition: "transform 0.1s",
 };
