@@ -1,14 +1,50 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { T } from "../theme.js";
+import { REEL_START_MS } from "../constants.js";
+import {
+  REEL_CELL, REEL_EASE, REEL_LOOPS, REEL_WIDTH,
+  reelDelay, reelDuration,
+} from "../reels.js";
+
+const EASE = `cubic-bezier(${REEL_EASE.join(",")})`;
 
 // ── Slot reels ─────────────────────────────────────────────────
 // Each digit is a tall strip of numerals inside a fixed window. The strip
-// starts at the top and transitions to the cell holding the final digit,
-// so the numerals blur past and decelerate into place. Reels are staggered
-// and land left to right, the way a fruit machine settles.
-export const REEL_CELL = 58;
-const REEL_WIDTH = 36;
-const REEL_LOOPS = 5;
+// starts at the top and animates to the cell holding the final digit, so the
+// numerals blur past and decelerate into place. Reels are staggered and land
+// left to right, the way a fruit machine settles. The motion itself lives in
+// reels.js, because the rattle has to follow exactly the same curve.
+
+// The window each digit sits in. Dark and recessed, so the numerals read as
+// lit faces behind glass rather than text floating on the panel.
+const reelFaceStyle = {
+  background: "rgba(0,2,7,0.96)",
+  border: "1px solid rgba(255,255,255,0.2)",
+  borderRadius: 3,
+  boxShadow: "inset 0 0 18px rgba(0,0,0,0.8)",
+  boxSizing: "border-box",
+};
+
+// Shared by the spinning reel and the settled number, so the faces don't
+// change appearance the moment the reels stop.
+function ReelFace({ children }) {
+  return (
+    <div style={{
+      ...reelFaceStyle,
+      position: "relative", overflow: "hidden",
+      height: REEL_CELL, width: REEL_WIDTH,
+    }}>
+      {children}
+      {/* Fades the numerals out at the lip of the window. */}
+      <div style={{
+        position: "absolute", inset: 0, pointerEvents: "none",
+        background: `linear-gradient(180deg,
+          rgba(10,13,22,0.95) 0%, rgba(10,13,22,0) 26%,
+          rgba(10,13,22,0) 74%, rgba(10,13,22,0.95) 100%)`,
+      }} />
+    </div>
+  );
+}
 
 function SlotDigit({ digit, delay, duration, onStop }) {
   const cells = useMemo(() => {
@@ -24,27 +60,26 @@ function SlotDigit({ digit, delay, duration, onStop }) {
 
   useEffect(() => {
     // Two frames so the browser commits the start position before the
-    // transition is applied, otherwise it snaps straight to the end.
+    // animation is applied, otherwise it snaps straight to the end.
     let raf2;
     const raf1 = requestAnimationFrame(() => { raf2 = requestAnimationFrame(() => setGo(true)); });
     return () => { cancelAnimationFrame(raf1); cancelAnimationFrame(raf2); };
   }, []);
 
   return (
-    <div style={{
-      position: "relative", overflow: "hidden",
-      height: REEL_CELL, width: REEL_WIDTH,
-    }}>
+    <ReelFace>
       <div
-        onTransitionEnd={(e) => {
-          if (e.propertyName !== "transform") return;
+        onAnimationEnd={(e) => {
+          if (e.animationName !== "reelSettle") return;
           setSpinning(false);
           onStop?.();
         }}
         style={{
-          transform: `translateY(${go ? -finalIdx * REEL_CELL : 0}px)`,
-          transition: go
-            ? `transform ${duration}ms cubic-bezier(.17,.72,.24,1) ${delay}ms`
+          // reelSettle overshoots and rocks back; a plain transition could
+          // only ease to a stop.
+          "--reel-end": `${-finalIdx * REEL_CELL}px`,
+          animation: go
+            ? `reelSettle ${duration}ms ${EASE} ${delay}ms both`
             : "none",
           filter: spinning ? "blur(0.5px)" : "none",
           willChange: "transform",
@@ -57,15 +92,7 @@ function SlotDigit({ digit, delay, duration, onStop }) {
           }}>{d}</div>
         ))}
       </div>
-
-      {/* Fades the numerals out at the lip of the window. */}
-      <div style={{
-        position: "absolute", inset: 0, pointerEvents: "none",
-        background: `linear-gradient(180deg,
-          rgba(10,13,22,0.95) 0%, rgba(10,13,22,0) 26%,
-          rgba(10,13,22,0) 74%, rgba(10,13,22,0.95) 100%)`,
-      }} />
-    </div>
+    </ReelFace>
   );
 }
 
@@ -79,10 +106,10 @@ export function SlotNumber({ value, onSettle }) {
     onSettle?.();
   };
 
-  // Safety net: if a transitionend is ever missed (backgrounded tab, reduced
-  // motion overriding the transition) the clock still starts.
+  // Safety net: if an animationend is ever missed (backgrounded tab, reduced
+  // motion overriding the animation) the clock still starts.
   useEffect(() => {
-    const id = setTimeout(finish, 2600);
+    const id = setTimeout(finish, REEL_START_MS + reelDuration(2) + reelDelay(2) + 900);
     return () => clearTimeout(id);
   }, []);
 
@@ -97,10 +124,32 @@ export function SlotNumber({ value, onSettle }) {
         <SlotDigit
           key={i}
           digit={d}
-          delay={i * 200}
-          duration={900 + i * 220}
+          delay={REEL_START_MS + reelDelay(i)}
+          duration={reelDuration(i)}
           onStop={i === digits.length - 1 ? finish : undefined}
         />
+      ))}
+    </div>
+  );
+}
+
+// The same faces holding a number that isn't spinning — the settled target,
+// and the target on the result screen.
+export function StaticNumber({ value, color = T.text, textShadow = "none", animation = "none", fontSize = 50 }) {
+  return (
+    <div style={{
+      height: REEL_CELL,
+      display: "flex", justifyContent: "center", gap: 2,
+      fontFamily: T.mono, fontSize, fontWeight: 700,
+      color, textShadow, animation,
+    }}>
+      {String(value).padStart(3, "0").split("").map((d, i) => (
+        <ReelFace key={i}>
+          <div style={{
+            height: REEL_CELL, lineHeight: `${REEL_CELL}px`,
+            textAlign: "center",
+          }}>{d}</div>
+        </ReelFace>
       ))}
     </div>
   );

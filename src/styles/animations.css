@@ -13,7 +13,22 @@
 @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
 
 /* Literal copy of T.goldGlow in theme.js — keep the two in step. */
-@keyframes shimmer { 0%,100% { box-shadow: 0 0 22px rgba(242,209,107,0.35) } 50% { box-shadow: 0 0 52px rgba(242,209,107,0.35) } }
+@keyframes shimmer { 0%,100% { box-shadow: 0 0 22px rgba(244,212,111,0.36) } 50% { box-shadow: 0 0 52px rgba(244,212,111,0.36) } }
+
+/* The reels overshoot and rock into place rather than easing to a stop.
+   --reel-end is set per digit by SlotDigit.
+
+   The 84% is REEL_TRAVEL in reels.js, which is what the rattle is timed
+   against — reels.test.js fails if the two drift apart. The travel now runs
+   longer and the rock is half what it was, so the last few numerals crawl
+   past instead of the strip snapping to a halt. */
+@keyframes reelSettle {
+  0%   { transform: translateY(0) }
+  84%  { transform: translateY(var(--reel-end)) }
+  91%  { transform: translateY(calc(var(--reel-end) - 4px)) }
+  96%  { transform: translateY(calc(var(--reel-end) + 2px)) }
+  100% { transform: translateY(var(--reel-end)) }
+}
 
 @keyframes phaseIn {
   from { opacity: 0; transform: translateY(14px) scale(0.978); filter: blur(3px); }
@@ -38,7 +53,16 @@
 .stagger > *:nth-child(7) { animation-delay: 0.41s }
 
 button { -webkit-tap-highlight-color: transparent; }
-button:active:not(:disabled) { transform: scale(0.94); }
+/* Suppress the focus ring for taps, keep it for keyboards. */
+button:focus { outline: none; }
+button:focus-visible { outline: 2px solid #43ddcd; outline-offset: 3px; }
+button:active:not(:disabled) { transform: translateY(1px) scale(0.96); }
+
+/* Hover only where there is a real pointer — on a phone it would stick
+   after a tap. */
+@media (hover: hover) {
+  button:hover:not(:disabled) { filter: brightness(1.08); }
+}
 
 @media (prefers-reduced-motion: reduce) {
   .stagger > *, .phase { animation: none !important; }

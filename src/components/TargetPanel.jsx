@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { T, urgencyColor } from "../theme.js";
 import { labelStyle } from "../styles.js";
-import { REEL_CELL, SlotNumber } from "./SlotNumber.jsx";
+import { SlotNumber, StaticNumber } from "./SlotNumber.jsx";
 
 // Timer drawn as a depleting stroke around the target card.
 export function TargetPanel({ target, seconds, total, running, finished, perfect, revealing, roundId, onRevealed }) {
@@ -39,10 +39,12 @@ export function TargetPanel({ target, seconds, total, running, finished, perfect
         boxSizing: "border-box",
         padding: "18px 24px 16px",
         borderRadius: T.r.lg,
+        // Lifted well clear of the near-black reel faces, so the digits read
+        // as lit windows set into the panel rather than holes in it.
         background: `radial-gradient(120% 140% at 50% 0%, ${
-          finished && perfect ? "rgba(242,209,107,0.09)" : "rgba(255,255,255,0.045)"
-        } 0%, rgba(255,255,255,0.015) 60%)`,
-        border: `1px solid ${T.panelBorder}`,
+          finished && perfect ? "rgba(244,212,111,0.12)" : "rgba(255,255,255,0.075)"
+        } 0%, rgba(255,255,255,0.03) 60%)`,
+        border: "1px solid rgba(255,255,255,0.14)",
         textAlign: "center",
         boxShadow: urgent ? `0 0 ${18 + (10 - seconds) * 3}px ${color}22` : "none",
         transition: "box-shadow 0.4s ease",
@@ -95,20 +97,12 @@ export function TargetPanel({ target, seconds, total, running, finished, perfect
       {revealing ? (
         <SlotNumber key={roundId} value={target} onSettle={onRevealed} />
       ) : (
-        <div style={{
-          height: REEL_CELL,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontFamily: T.mono,
-          fontSize: 50,
-          fontWeight: 700,
-          lineHeight: 1,
-          color: finished ? (perfect ? T.gold : T.cyan) : urgent ? color : T.text,
-          textShadow: urgent ? `0 0 22px ${color}55` : "none",
-          transition: "color 0.9s ease",
-          animation: critical ? "beat 1s ease-in-out infinite" : "none",
-        }}>
-          {target}
-        </div>
+        <StaticNumber
+          value={target}
+          color={finished ? (perfect ? T.gold : T.cyan) : urgent ? color : T.text}
+          textShadow={urgent ? `0 0 22px ${color}55` : "none"}
+          animation={critical ? "beat 1s ease-in-out infinite" : "none"}
+        />
       )}
     </div>
   );

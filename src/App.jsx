@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { T } from "./theme.js";
 import { ghostBtn, labelStyle, panelStyle, primaryBtn } from "./styles.js";
-import { PHASES, PHASE_ORDER, REDUCED, SWAP_MS } from "./constants.js";
+import {
+  PHASES, PHASE_ORDER, REDUCED, REEL_START_MS, SWAP_MS, TILE_COUNT, TILE_DEAL_MS,
+} from "./constants.js";
 import {
   OPERATORS, ROUND_LENGTHS,
   evaluate, generateNumbers, generateSolvableTarget, generateTarget,
@@ -17,6 +19,8 @@ import { OpButton } from "./components/OpButton.jsx";
 import { StepColumn } from "./components/StepColumn.jsx";
 import { StepList } from "./components/StepList.jsx";
 import { TargetPanel } from "./components/TargetPanel.jsx";
+import { StaticNumber } from "./components/SlotNumber.jsx";
+import { SoundToggle } from "./components/SoundToggle.jsx";
 
 // ── Main Game ──────────────────────────────────────────────────
 export default function CountdownGame() {
@@ -70,7 +74,17 @@ export default function CountdownGame() {
       setArmed(false);
       if (REDUCED) { setRunning(true); return; }
       setRevealing(true);
-      Sound.reels();
+
+      // The tiles used to appear in silence and the reels opened with one
+      // loud hit. Now each tile lands on its own click and the reels follow.
+      //
+      // Deliberately not cleaned up: setArmed(false) above re-runs this
+      // effect, so a cleanup would cancel every timer the moment it was
+      // scheduled and the deal would be silent again. They are one-shot
+      // sound cues with no state to leak, and the guard above stops them
+      // being scheduled twice.
+      for (let i = 0; i < TILE_COUNT; i++) setTimeout(Sound.tileDrop, i * TILE_DEAL_MS);
+      setTimeout(Sound.reels, REEL_START_MS);
     }
   }, [armed, anim, displayPhase]);
 
@@ -318,21 +332,10 @@ export default function CountdownGame() {
           fontFamily: T.mono, fontSize: 9.5, letterSpacing: 4,
           color: T.muted, marginTop: 3,
         }}>NUMBERS ROUND</div>
-        <button
-          onClick={() => { const n = !muted; setMuted(n); Sound.setMuted(n); }}
-          style={{
-            position: "absolute", top: -2, right: 0,
-            width: 34, height: 34, borderRadius: T.r.md,
-            border: `1px solid ${T.panelBorder}`,
-            background: "transparent",
-            color: muted ? T.dim : T.mutedLight,
-            fontSize: 15, cursor: "pointer",
-            display: "flex", alignItems: "center", justifyContent: "center",
-          }}
-          aria-label={muted ? "Unmute" : "Mute"}
-        >
-          {muted ? "🔇" : "🔊"}
-        </button>
+        <SoundToggle
+          muted={muted}
+          onToggle={() => { const n = !muted; setMuted(n); Sound.setMuted(n); }}
+        />
       </div>
 
       {/* Animated phase container */}
@@ -415,7 +418,7 @@ export default function CountdownGame() {
           </div>
 
           <div style={{ display: "flex", gap: T.gap.md, width: "100%" }}>
-            {ROUND_LENGTHS.map((len, i) => (
+            {ROUND_LENGTHS.map((len) => (
               <button
                 key={len}
                 onClick={() => startGame(len)}
@@ -424,13 +427,11 @@ export default function CountdownGame() {
                   padding: "14px 8px",
                   borderRadius: T.r.lg,
                   border: "none",
-                  background: i === 0
-                    ? `linear-gradient(135deg, ${T.cyan}, ${T.violet})`
-                    : `linear-gradient(135deg, ${T.violet}, ${T.cyan})`,
+                  background: `linear-gradient(140deg, ${T.cyan}, ${T.violet})`,
                   color: "#08101a",
                   cursor: "pointer",
                   fontFamily: T.sans,
-                  boxShadow: `0 6px 26px ${i === 0 ? T.cyanGlow : "rgba(139,127,212,0.2)"}`,
+                  boxShadow: `0 4px 16px ${T.cyanGlow}`,
                   display: "flex", flexDirection: "column",
                   alignItems: "center", gap: 1,
                   transition: "transform 0.1s",
@@ -494,8 +495,16 @@ export default function CountdownGame() {
               <div
                 key={`n-${i}`}
                 style={{
-                  animation: REDUCED ? "none" : "popIn 0.34s cubic-bezier(.34,1.4,.5,1) both",
-                  animationDelay: liveSteps.length === 0 ? `${i * 45}ms` : "0ms",
+                  // Each tile lands on its own click, so the delay here is the
+                  // same TILE_DEAL_MS the sound uses. Only while revealing:
+                  // afterwards the tiles must reappear instantly, so undoing a
+                  // calculation puts its two numbers straight back.
+                  animation: REDUCED || !revealing
+                    ? "none"
+                    : "popIn 0.34s cubic-bezier(.34,1.4,.5,1) both",
+                  animationDelay: revealing && liveSteps.length === 0
+                    ? `${i * TILE_DEAL_MS}ms`
+                    : "0ms",
                 }}
               >
                 <NumberTile
@@ -519,8 +528,9 @@ export default function CountdownGame() {
 
           {/* Expression + operator pad */}
           <div style={{
-            display: "flex", alignItems: "center", justifyContent: "center",
-            gap: 20, width: "100%",
+            display: "flex", flexDirection: "column",
+            alignItems: "center", justifyContent: "center",
+            gap: 12, width: "100%",
           }}>
             <div style={{
               display: "grid",
@@ -539,10 +549,11 @@ export default function CountdownGame() {
             </div>
 
             <div style={{
-              flex: 1, minWidth: 0,
+              width: "100%", minHeight: 32,
               fontFamily: T.mono, fontSize: 20,
-              display: "flex", flexDirection: "column", gap: 4,
-              alignItems: "flex-start",
+              display: "flex", flexDirection: "row", gap: 8,
+              alignItems: "center", justifyContent: "center",
+              textAlign: "center",
             }}>
               {currentA !== null ? (
                 <>
@@ -555,13 +566,13 @@ export default function CountdownGame() {
                       <span style={{ fontSize: 10, color: T.muted, marginLeft: 5 }}>cont.</span>
                     )}
                   </span>
-                  <span style={{ color: currentOp ? T.gold : T.dim, fontSize: 22 }}>
+                  <span style={{ color: currentOp ? T.gold : T.mutedLight, fontSize: 22 }}>
                     {currentOp || "·"}
                   </span>
-                  <span style={{ color: T.dim }}>{currentOp ? "?" : ""}</span>
+                  <span style={{ color: T.mutedLight }}>{currentOp ? "?" : ""}</span>
                 </>
               ) : (
-                <span style={{ color: T.dim, fontSize: 12, lineHeight: 1.5 }}>
+                <span style={{ color: T.muted, fontSize: 12, lineHeight: 1.5 }}>
                   {lastCalcIndex >= 0
                     ? <>Tap a number,<br />or an operator to<br />carry on from {intermediates[lastCalcIndex].value}.</>
                     : <>Tap a number,<br />then an operator.</>}
@@ -601,10 +612,7 @@ export default function CountdownGame() {
             animation: perfect ? "shimmer 2.4s ease-in-out infinite" : "none",
           }}>
             <div style={labelStyle}>Target</div>
-            <div style={{
-              fontFamily: T.mono, fontSize: 46, fontWeight: 700, lineHeight: 1,
-              color: perfect ? T.gold : T.cyan,
-            }}>{target}</div>
+            <StaticNumber value={target} color={perfect ? T.gold : T.cyan} fontSize={46} />
 
             {bestResult !== null && (
               <div style={{ marginTop: 10 }}>
