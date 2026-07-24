@@ -4,6 +4,47 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning is
 [semantic](https://semver.org/).
 
+## [1.1.0] — 2026-07-24
+
+Restores an audio and visual pass that was made in a parallel Codex session on
+2026-07-21 (commit `12702ae`, "fix many UI issues") and then reverted by
+`42e3686` the following day, which rebuilt `app.js` from an artifact that never
+had it. Ported onto the current source, keeping the implicit-operand feature
+`42e3686` introduced.
+
+### Added
+
+- A tile click voice: white noise through a highpass, replacing the plucked
+  string used for every tap.
+- The six tiles are dealt one at a time, each with its own click, before the
+  reels spin. Previously they appeared in silence.
+- Reels land on light ticks; the reel windows are dark recessed faces with an
+  inset shadow, and keep that styling once they stop.
+- `reelSettle` — reels overshoot and rock into place instead of easing to a
+  stop.
+- Keyboard focus rings via `:focus-visible`, and hover only behind
+  `@media (hover: hover)` so it can't stick after a tap.
+
+### Changed
+
+- Contrast pass over the whole palette: every foreground colour lifted.
+- The countdown bass moved up an octave (D1 → D2) and the low tones under the
+  reel stops, time-up and failure cues were cut or shortened. Nothing now
+  reaches below D2.
+- The solver prefers the shortest exact answer, and each candidate carries the
+  steps that produced it — so a reported solution no longer includes
+  operations that fed values the answer never used.
+- The operator pad is centred, with the expression under it rather than beside
+  it.
+
+### Fixed
+
+- iOS no longer paints a white flash on tap: `color-scheme: dark` plus an
+  appearance reset on buttons.
+- A tile already equal to the target is again reported as a zero-step answer.
+  Codex's fast path would have answered a target of 100 with `25 + 75` while a
+  100 tile sat on the board.
+
 ## [1.0.0] — 2026-07-24
 
 First release built from source. No gameplay changes: this is the same game as

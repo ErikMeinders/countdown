@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import { T, urgencyColor } from "../theme.js";
 import { labelStyle } from "../styles.js";
-import { REEL_CELL, SlotNumber } from "./SlotNumber.jsx";
+import { SlotNumber, StaticNumber } from "./SlotNumber.jsx";
 
 // Timer drawn as a depleting stroke around the target card.
 export function TargetPanel({ target, seconds, total, running, finished, perfect, revealing, roundId, onRevealed }) {
@@ -95,20 +95,12 @@ export function TargetPanel({ target, seconds, total, running, finished, perfect
       {revealing ? (
         <SlotNumber key={roundId} value={target} onSettle={onRevealed} />
       ) : (
-        <div style={{
-          height: REEL_CELL,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontFamily: T.mono,
-          fontSize: 50,
-          fontWeight: 700,
-          lineHeight: 1,
-          color: finished ? (perfect ? T.gold : T.cyan) : urgent ? color : T.text,
-          textShadow: urgent ? `0 0 22px ${color}55` : "none",
-          transition: "color 0.9s ease",
-          animation: critical ? "beat 1s ease-in-out infinite" : "none",
-        }}>
-          {target}
-        </div>
+        <StaticNumber
+          value={target}
+          color={finished ? (perfect ? T.gold : T.cyan) : urgent ? color : T.text}
+          textShadow={urgent ? `0 0 22px ${color}55` : "none"}
+          animation={critical ? "beat 1s ease-in-out infinite" : "none"}
+        />
       )}
     </div>
   );

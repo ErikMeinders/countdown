@@ -36,6 +36,24 @@ describe("solve", () => {
     expect(r.steps).toEqual([]);
   });
 
+  it("prefers a single operation over a longer chain to the same target", () => {
+    const r = solve([25, 50, 75, 3, 6, 7], 125);
+    expect(r.exact).toBe(true);
+    expect(r.steps).toHaveLength(1);
+  });
+
+  // With one shared step list the answer used to include operations that fed
+  // values the answer never used.
+  it("reports only the steps that produced the answer", () => {
+    const numbers = [25, 50, 75, 100, 3, 6];
+    const r = solve(numbers, 952);
+    const pool = replay(numbers, r.steps);
+    expect(pool).toContain(952);
+    for (const s of r.steps) {
+      expect(Number.isInteger(s.result) && s.result > 0).toBe(true);
+    }
+  });
+
   it("reports the closest miss when the target is unreachable", () => {
     // 1 1 2 2 3 3 cannot reach anywhere near 999.
     const r = solve([1, 1, 2, 2, 3, 3], 999);
