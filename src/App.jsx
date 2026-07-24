@@ -2,7 +2,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { T } from "./theme.js";
 import { ghostBtn, labelStyle, panelStyle, primaryBtn } from "./styles.js";
-import { PHASES, PHASE_ORDER, REDUCED, REEL_START_MS, SWAP_MS, TILE_DEAL_MS } from "./constants.js";
+import {
+  PHASES, PHASE_ORDER, REDUCED, REEL_START_MS, SWAP_MS, TILE_COUNT, TILE_DEAL_MS,
+} from "./constants.js";
 import {
   OPERATORS, ROUND_LENGTHS,
   evaluate, generateNumbers, generateSolvableTarget, generateTarget,
@@ -80,7 +82,7 @@ export default function CountdownGame() {
       // scheduled and the deal would be silent again. They are one-shot
       // sound cues with no state to leak, and the guard above stops them
       // being scheduled twice.
-      for (let i = 0; i < 6; i++) setTimeout(Sound.tileDrop, i * TILE_DEAL_MS);
+      for (let i = 0; i < TILE_COUNT; i++) setTimeout(Sound.tileDrop, i * TILE_DEAL_MS);
       setTimeout(Sound.reels, REEL_START_MS);
     }
   }, [armed, anim, displayPhase]);
@@ -505,8 +507,16 @@ export default function CountdownGame() {
               <div
                 key={`n-${i}`}
                 style={{
-                  animation: REDUCED ? "none" : "popIn 0.34s cubic-bezier(.34,1.4,.5,1) both",
-                  animationDelay: liveSteps.length === 0 ? `${i * 45}ms` : "0ms",
+                  // Each tile lands on its own click, so the delay here is the
+                  // same TILE_DEAL_MS the sound uses. Only while revealing:
+                  // afterwards the tiles must reappear instantly, so undoing a
+                  // calculation puts its two numbers straight back.
+                  animation: REDUCED || !revealing
+                    ? "none"
+                    : "popIn 0.34s cubic-bezier(.34,1.4,.5,1) both",
+                  animationDelay: revealing && liveSteps.length === 0
+                    ? `${i * TILE_DEAL_MS}ms`
+                    : "0ms",
                 }}
               >
                 <NumberTile

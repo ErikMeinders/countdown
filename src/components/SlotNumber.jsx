@@ -14,10 +14,10 @@ const REEL_LOOPS = 5;
 // The window each digit sits in. Dark and recessed, so the numerals read as
 // lit faces behind glass rather than text floating on the panel.
 const reelFaceStyle = {
-  background: "rgba(2,5,12,0.88)",
-  border: "1px solid rgba(255,255,255,0.11)",
+  background: "rgba(0,2,7,0.96)",
+  border: "1px solid rgba(255,255,255,0.2)",
   borderRadius: 3,
-  boxShadow: "inset 0 0 16px rgba(0,0,0,0.65)",
+  boxShadow: "inset 0 0 18px rgba(0,0,0,0.8)",
   boxSizing: "border-box",
 };
 

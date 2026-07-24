@@ -39,10 +39,12 @@ export function TargetPanel({ target, seconds, total, running, finished, perfect
         boxSizing: "border-box",
         padding: "18px 24px 16px",
         borderRadius: T.r.lg,
+        // Lifted well clear of the near-black reel faces, so the digits read
+        // as lit windows set into the panel rather than holes in it.
         background: `radial-gradient(120% 140% at 50% 0%, ${
-          finished && perfect ? "rgba(242,209,107,0.09)" : "rgba(255,255,255,0.045)"
-        } 0%, rgba(255,255,255,0.015) 60%)`,
-        border: `1px solid ${T.panelBorder}`,
+          finished && perfect ? "rgba(244,212,111,0.12)" : "rgba(255,255,255,0.075)"
+        } 0%, rgba(255,255,255,0.03) 60%)`,
+        border: "1px solid rgba(255,255,255,0.14)",
         textAlign: "center",
         boxShadow: urgent ? `0 0 ${18 + (10 - seconds) * 3}px ${color}22` : "none",
         transition: "box-shadow 0.4s ease",

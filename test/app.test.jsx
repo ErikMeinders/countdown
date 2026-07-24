@@ -8,6 +8,7 @@ vi.mock("../src/sound.js", () => ({
 }));
 
 import App from "../src/App.jsx";
+import { TILE_COUNT, TILE_DEAL_MS } from "../src/constants.js";
 
 afterEach(cleanup);
 
@@ -30,6 +31,26 @@ describe("the game", () => {
     expect(prompt).toBeDefined();
     expect(screen.getByText("Target")).toBeDefined();
     expect(screen.getByText("Submit")).toBeDefined();
+  });
+
+  // The tiles' pop-in and their clicks are scheduled in different places. When
+  // they drifted apart the six tiles appeared at once and the clicks rattled
+  // off afterwards with nothing to attach to.
+  it("staggers the tile pop-in by the same interval as the deal clicks", async () => {
+    const { container } = render(<App />);
+    fireEvent.click(screen.getByText("30"));
+    await waitFor(() => screen.getByText(/Tap a number,/));
+
+    // jsdom doesn't expand the `animation` shorthand, so read the attribute.
+    const dealt = [...container.querySelectorAll("div")]
+      .map((el) => el.getAttribute("style") || "")
+      .filter((s) => s.includes("animation: popIn") && s.includes("animation-delay"))
+      .map((s) => parseInt(s.match(/animation-delay:\s*(\d+)ms/)[1], 10));
+
+    expect(dealt).toHaveLength(TILE_COUNT);
+    expect(dealt).toEqual(
+      Array.from({ length: TILE_COUNT }, (_, i) => i * TILE_DEAL_MS)
+    );
   });
 
   it("opens and closes the help overlay", async () => {
