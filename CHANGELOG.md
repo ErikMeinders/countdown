@@ -22,7 +22,9 @@ All notable changes to this project are documented here. The format follows
 - Softer stop: travel extended from 76% to 84% of the animation, the rock
   halved, and reels run 1700–2220 ms rather than 1450–1950 ms.
 - The mute control is a drawn SVG rather than 🔊/🔇, which arrive in full
-  colour on iOS and at a different weight on every platform.
+  colour on iOS and at a different weight on every platform. It wears the same
+  recessed reel face as the target spinner, so the speaker sits behind the
+  glass like a numeral.
 - Both round-length buttons share one treatment; they previously ran the same
   gradient in opposite directions, which read as decoration standing in for a
   distinction.
