@@ -4,7 +4,7 @@ export function OpButton({ op, onClick, active, enabled }) {
   const T = useTheme();
   return (
     <button onClick={onClick} disabled={!enabled} style={{
-      width: 64, height: 64, borderRadius: T.r.md,
+      width: 58, height: 58, borderRadius: T.r.md,
       border: `1.5px solid ${active ? T.gold : enabled ? T.hairStrong : T.hairFaint}`,
       background: active
         ? T.goldDim
@@ -14,7 +14,7 @@ export function OpButton({ op, onClick, active, enabled }) {
       color: active ? T.gold : enabled ? T.text : T.dim,
       // Heavier than the tiles' 700 would be, but these are glyphs rather than
       // numerals and thin ones disappear against the panel.
-      fontSize: 27, fontWeight: 600, fontFamily: T.mono,
+      fontSize: 31, fontWeight: 600, fontFamily: T.mono, lineHeight: 1,
       cursor: enabled ? "pointer" : "default",
       transition: "all 0.15s",
       boxShadow: active ? `0 0 16px ${T.goldGlow}` : "none",

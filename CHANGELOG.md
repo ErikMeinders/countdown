@@ -19,6 +19,9 @@ All notable changes to this project are documented here. The format follows
 - The reels sit in a dark, lit-edged well, so the display stands out clearly
   from whatever is behind it — the light panel or the dark one. The reels stay
   a dark "clock face" in both themes; only the surrounding chrome changes.
+- "Clear" is now "Cancel", and is live only while you're part-way through a
+  pick — which is what sets it apart from Reset, that wipes the whole board.
+- Operator buttons match the number tiles' size, with larger signs.
 
 ## [1.2.0] — 2026-07-24
 

@@ -134,8 +134,9 @@ export function HelpOverlay({ onClose }) {
           <div style={row}><span style={term}>Undo</span>
             <span>Double-tap an amber tile to unpick that calculation and get
               its numbers back.</span></div>
-          <div style={row}><span style={term}>Clear</span>
-            <span>Drops the number/operator you're part-way through choosing.</span></div>
+          <div style={row}><span style={term}>Cancel</span>
+            <span>Drops the number and operator you're part-way through
+              choosing. Off until you've started one.</span></div>
           <div style={row}><span style={term}>Reset</span>
             <span>Wipes all your working and starts the round over.</span></div>
           <div style={row}><span style={term}>Submit</span>

@@ -538,9 +538,9 @@ export default function CountdownGame() {
           }}>
             <div style={{
               display: "grid",
-              gridTemplateColumns: "repeat(2, 64px)",
-              gridTemplateRows: "repeat(2, 64px)",
-              gap: T.gap.md,
+              gridTemplateColumns: "repeat(2, 58px)",
+              gridTemplateRows: "repeat(2, 58px)",
+              gap: T.gap.sm,
             }}>
               {OPERATORS.map(op => (
                 <OpButton
@@ -594,8 +594,21 @@ export default function CountdownGame() {
           )}
 
           <div style={{ display: "flex", gap: T.gap.md }}>
+            {/* Cancel only drops the pick you're part-way through, so it's
+                live only when there is one — which is what tells it apart from
+                Reset, that wipes the whole board. */}
+            <button
+              onClick={() => { setCurrentA(null); setCurrentOp(null); }}
+              disabled={currentA === null && currentOp === null}
+              style={{
+                ...ghostBtn(T),
+                opacity: currentA === null && currentOp === null ? 0.4 : 1,
+                cursor: currentA === null && currentOp === null ? "default" : "pointer",
+              }}
+            >
+              Cancel
+            </button>
             <button onClick={resetAll} style={ghostBtn(T)}>Reset</button>
-            <button onClick={() => { setCurrentA(null); setCurrentOp(null); }} style={ghostBtn(T)}>Clear</button>
             <button onClick={endRound} style={{ ...ghostBtn(T), borderColor: `${T.cyan}55`, color: T.cyan }}>
               Submit
             </button>
