@@ -23,11 +23,26 @@
 <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
 <link rel="manifest" href="./manifest.json">
 
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Outfit:wght@300;500;700;900&display=swap">
-
 <style>
+  /* Self-hosted, so the app keeps its type with no signal — the Google Fonts
+     CDN can't be reached offline, and the icon is rendered from the same
+     JetBrains Mono, so the two can't drift. Files live in public/fonts and are
+     precached by the service worker. */
+  @font-face { font-family: 'JetBrains Mono'; font-weight: 400; font-display: swap;
+    src: url('./fonts/jetbrains-mono-400.woff2') format('woff2'); }
+  @font-face { font-family: 'JetBrains Mono'; font-weight: 500; font-display: swap;
+    src: url('./fonts/jetbrains-mono-500.woff2') format('woff2'); }
+  @font-face { font-family: 'JetBrains Mono'; font-weight: 700; font-display: swap;
+    src: url('./fonts/jetbrains-mono-700.woff2') format('woff2'); }
+  @font-face { font-family: 'Outfit'; font-weight: 300; font-display: swap;
+    src: url('./fonts/outfit-300.woff2') format('woff2'); }
+  @font-face { font-family: 'Outfit'; font-weight: 500; font-display: swap;
+    src: url('./fonts/outfit-500.woff2') format('woff2'); }
+  @font-face { font-family: 'Outfit'; font-weight: 700; font-display: swap;
+    src: url('./fonts/outfit-700.woff2') format('woff2'); }
+  @font-face { font-family: 'Outfit'; font-weight: 900; font-display: swap;
+    src: url('./fonts/outfit-900.woff2') format('woff2'); }
+
   :root { color-scheme: dark; }
 
   html, body {

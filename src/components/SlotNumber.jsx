@@ -15,15 +15,24 @@ const EASE = `cubic-bezier(${REEL_EASE.join(",")})`;
 // left to right, the way a fruit machine settles. The motion itself lives in
 // reels.js, because the rattle has to follow exactly the same curve.
 
-// The window each digit sits in. Dark and recessed, so the numerals read as
-// lit faces behind glass rather than text floating on the panel.
+// The window each digit sits in. Near-black so the lit digit has the most to
+// push against, with a bright rim and top bevel to lift it off the panel and
+// a dark outer shadow so it reads as a window rather than a flat patch. Kept
+// in step with the app icon (tools/make-icons.py).
 const reelFaceStyle = {
-  background: "rgba(0,2,7,0.96)",
-  border: "1px solid rgba(255,255,255,0.2)",
+  background: "rgba(0,2,6,0.98)",
+  border: "1px solid rgba(255,255,255,0.32)",
   borderRadius: 3,
-  boxShadow: "inset 0 0 18px rgba(0,0,0,0.8)",
+  boxShadow:
+    "0 2px 6px rgba(0,0,0,0.55)," +          // lift off the panel
+    "inset 0 1px 0 rgba(255,255,255,0.14)," + // bevel highlight
+    "inset 0 0 16px rgba(0,0,0,0.85)",        // recess
   boxSizing: "border-box",
 };
+
+// A digit sitting behind the glass glows faintly in its own colour, the way
+// the target does in the app.
+const reelGlow = (color) => `0 0 16px ${color}66`;
 
 // Shared by the spinning reel and the settled number, so the faces don't
 // change appearance the moment the reels stop.
@@ -35,12 +44,13 @@ function ReelFace({ children }) {
       height: REEL_CELL, width: REEL_WIDTH,
     }}>
       {children}
-      {/* Fades the numerals out at the lip of the window. */}
+      {/* Fades the numerals out at the lip of the window — softened so it
+          frames the digit without dimming it. */}
       <div style={{
         position: "absolute", inset: 0, pointerEvents: "none",
         background: `linear-gradient(180deg,
-          rgba(10,13,22,0.95) 0%, rgba(10,13,22,0) 26%,
-          rgba(10,13,22,0) 74%, rgba(10,13,22,0.95) 100%)`,
+          rgba(6,9,16,0.85) 0%, rgba(6,9,16,0) 22%,
+          rgba(6,9,16,0) 78%, rgba(6,9,16,0.85) 100%)`,
       }} />
     </div>
   );
@@ -119,6 +129,7 @@ export function SlotNumber({ value, onSettle }) {
       height: REEL_CELL,
       fontFamily: T.mono, fontSize: 50, fontWeight: 700,
       color: T.text,
+      textShadow: reelGlow(T.text),
     }}>
       {digits.map((d, i) => (
         <SlotDigit
@@ -136,12 +147,15 @@ export function SlotNumber({ value, onSettle }) {
 // The same faces holding a number that isn't spinning — the settled target,
 // and the target on the result screen.
 export function StaticNumber({ value, color = T.text, textShadow = "none", animation = "none", fontSize = 50 }) {
+  // Its own colour blooms behind the glass; any caller shadow (the urgency
+  // halo) layers on top.
+  const shadow = textShadow === "none" ? reelGlow(color) : `${textShadow}, ${reelGlow(color)}`;
   return (
     <div style={{
       height: REEL_CELL,
       display: "flex", justifyContent: "center", gap: 2,
       fontFamily: T.mono, fontSize, fontWeight: 700,
-      color, textShadow, animation,
+      color, textShadow: shadow, animation,
     }}>
       {String(value).padStart(3, "0").split("").map((d, i) => (
         <ReelFace key={i}>

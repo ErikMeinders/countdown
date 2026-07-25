@@ -11,6 +11,10 @@ All notable changes to this project are documented here. The format follows
 - `src/reels.js` — one description of the reel motion, which both the
   animation and the rattle are derived from. `test/reels.test.js` fails if the
   keyframes and the model drift apart.
+- Self-hosted fonts. JetBrains Mono and Outfit ship in `public/fonts` and are
+  precached, so the app keeps its type with no signal — the Google Fonts CDN
+  can't be reached offline, and the icon is rendered from the same JetBrains
+  Mono, so the two can no longer diverge.
 
 ### Changed
 
@@ -28,9 +32,14 @@ All notable changes to this project are documented here. The format follows
   distinction.
 - Decorative glow trimmed. Shadows now mean something: cyan lift on primary
   actions, gold for what you've selected, and the urgency glow on the clock.
+- The reel windows pop harder, in the game and the icon alike: near-black
+  faces, a brighter rim and top bevel, a dark shadow lifting them off the
+  panel, and each digit blooming faintly in its own colour.
 - New app icon: the target spinner itself — three recessed reel windows
-  showing a target, on the app's background gradient. Generated from
-  `tools/make-icons.py`, so it can be regenerated rather than hand-drawn.
+  showing a target, on the app's background gradient. Rendered in JetBrains
+  Mono to match the game, enlarged so the digits carry at small sizes while
+  staying inside the maskable safe zone. Generated from `tools/make-icons.py`,
+  so it can be regenerated rather than hand-drawn.
 
 ## [1.1.0] — 2026-07-24
 
