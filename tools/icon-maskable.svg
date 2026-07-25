@@ -5,46 +5,91 @@
       <stop offset="45%" stop-color="#0c1220"/>
       <stop offset="100%" stop-color="#080a12"/>
     </radialGradient>
-    <!-- The reel lip fade from src/components/SlotNumber.jsx, so the digit
-         reads as lit glass rather than flat text. -->
-    <linearGradient id="lip" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%"  stop-color="rgba(10,13,22,0.95)"/>
-      <stop offset="26%" stop-color="rgba(10,13,22,0)"/>
-      <stop offset="74%" stop-color="rgba(10,13,22,0)"/>
-      <stop offset="100%" stop-color="rgba(10,13,22,0.95)"/>
+    <!-- Bevel highlight down the top half of each window. -->
+    <linearGradient id="bevel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="rgba(255,255,255,0.10)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
     </linearGradient>
+    <!-- The reel lip fade from src/components/SlotNumber.jsx, softened so it
+         frames the digit without dimming it. -->
+    <linearGradient id="lip" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="rgba(6,9,16,0.85)"/>
+      <stop offset="22%" stop-color="rgba(6,9,16,0)"/>
+      <stop offset="78%" stop-color="rgba(6,9,16,0)"/>
+      <stop offset="100%" stop-color="rgba(6,9,16,0.85)"/>
+    </linearGradient>
+    <filter id="lift" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#000000" flood-opacity="0.65"/>
+    </filter>
+    <!-- Cyan bloom behind the digit, the glow the app gives the target. -->
+    <filter id="bloom" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="7" result="b"/>
+      <feFlood flood-color="#43ddcd" flood-opacity="0.55"/>
+      <feComposite in2="b" operator="in" result="glow"/>
+      <feMerge>
+        <feMergeNode in="glow"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   </defs>
 
   <rect width="512" height="512" fill="url(#bg)"/>
   
     <g>
-      <rect x="153.9" y="207.3" width="62.6" height="97.4"
-            rx="7.0" fill="#000207" stroke="rgba(255,255,255,0.22)"
-            stroke-width="1.39"/>
-      <text x="185.2" y="256.0" fill="#43ddcd"
-            font-family="JetBrains Mono, Menlo, monospace" font-weight="700" font-size="65"
-            text-anchor="middle" dominant-baseline="central">9</text>
-      <rect x="153.9" y="207.3" width="62.6" height="97.4"
-            rx="7.0" fill="url(#lip)"/>
+      <!-- Recessed face. A dark drop-shadow lifts it off the gradient; the
+           bright inner top edge is the bevel that makes it read as glass. -->
+      <rect x="96.8" y="183.2" width="99.2" height="145.6"
+            rx="10.4" fill="#000206" filter="url(#lift)"/>
+      <rect x="98.0" y="184.4"
+            width="96.8" height="143.2"
+            rx="9.2" fill="none"
+            stroke="rgba(255,255,255,0.34)" stroke-width="2.40"/>
+      <rect x="98.0" y="184.4"
+            width="96.8" height="72.8"
+            rx="9.2" fill="url(#bevel)"/>
+      <text x="146.4" y="257.6" fill="#43ddcd"
+            font-family="JetBrains Mono" font-weight="700"
+            font-size="99" text-anchor="middle"
+            dominant-baseline="central" filter="url(#bloom)">9</text>
+      <rect x="96.8" y="183.2" width="99.2" height="145.6"
+            rx="10.4" fill="url(#lip)"/>
     </g>
     <g>
-      <rect x="224.7" y="207.3" width="62.6" height="97.4"
-            rx="7.0" fill="#000207" stroke="rgba(255,255,255,0.22)"
-            stroke-width="1.39"/>
-      <text x="256.0" y="256.0" fill="#43ddcd"
-            font-family="JetBrains Mono, Menlo, monospace" font-weight="700" font-size="65"
-            text-anchor="middle" dominant-baseline="central">5</text>
-      <rect x="224.7" y="207.3" width="62.6" height="97.4"
-            rx="7.0" fill="url(#lip)"/>
+      <!-- Recessed face. A dark drop-shadow lifts it off the gradient; the
+           bright inner top edge is the bevel that makes it read as glass. -->
+      <rect x="206.4" y="183.2" width="99.2" height="145.6"
+            rx="10.4" fill="#000206" filter="url(#lift)"/>
+      <rect x="207.6" y="184.4"
+            width="96.8" height="143.2"
+            rx="9.2" fill="none"
+            stroke="rgba(255,255,255,0.34)" stroke-width="2.40"/>
+      <rect x="207.6" y="184.4"
+            width="96.8" height="72.8"
+            rx="9.2" fill="url(#bevel)"/>
+      <text x="256.0" y="257.6" fill="#43ddcd"
+            font-family="JetBrains Mono" font-weight="700"
+            font-size="99" text-anchor="middle"
+            dominant-baseline="central" filter="url(#bloom)">5</text>
+      <rect x="206.4" y="183.2" width="99.2" height="145.6"
+            rx="10.4" fill="url(#lip)"/>
     </g>
     <g>
-      <rect x="295.4" y="207.3" width="62.6" height="97.4"
-            rx="7.0" fill="#000207" stroke="rgba(255,255,255,0.22)"
-            stroke-width="1.39"/>
-      <text x="326.8" y="256.0" fill="#43ddcd"
-            font-family="JetBrains Mono, Menlo, monospace" font-weight="700" font-size="65"
-            text-anchor="middle" dominant-baseline="central">2</text>
-      <rect x="295.4" y="207.3" width="62.6" height="97.4"
-            rx="7.0" fill="url(#lip)"/>
+      <!-- Recessed face. A dark drop-shadow lifts it off the gradient; the
+           bright inner top edge is the bevel that makes it read as glass. -->
+      <rect x="316.0" y="183.2" width="99.2" height="145.6"
+            rx="10.4" fill="#000206" filter="url(#lift)"/>
+      <rect x="317.2" y="184.4"
+            width="96.8" height="143.2"
+            rx="9.2" fill="none"
+            stroke="rgba(255,255,255,0.34)" stroke-width="2.40"/>
+      <rect x="317.2" y="184.4"
+            width="96.8" height="72.8"
+            rx="9.2" fill="url(#bevel)"/>
+      <text x="365.6" y="257.6" fill="#43ddcd"
+            font-family="JetBrains Mono" font-weight="700"
+            font-size="99" text-anchor="middle"
+            dominant-baseline="central" filter="url(#bloom)">2</text>
+      <rect x="316.0" y="183.2" width="99.2" height="145.6"
+            rx="10.4" fill="url(#lip)"/>
     </g>
 </svg>
