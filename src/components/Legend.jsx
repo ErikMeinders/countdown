@@ -1,12 +1,13 @@
-import { T } from "../theme.js";
+import { useTheme } from "../theme-context.jsx";
 
 export function Legend() {
+  const T = useTheme();
   const swatch = (style) => ({
     display: "inline-block", width: 10, height: 10, borderRadius: 2, ...style,
   });
   const items = [
     ["used", swatch({ border: `1.5px solid ${T.cyan}`, background: T.cyanDim })],
-    ["unused", swatch({ border: "1.5px dashed rgba(255,255,255,0.18)", background: "transparent" })],
+    ["unused", swatch({ border: `1.5px dashed ${T.hairStrong}`, background: "transparent" })],
     ["calculated", swatch({ border: `1.5px solid ${T.orange}`, background: T.orangeDim })],
   ];
   return (

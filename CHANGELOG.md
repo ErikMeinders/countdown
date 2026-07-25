@@ -4,6 +4,39 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning is
 [semantic](https://semver.org/).
 
+## [1.3.0] — 2026-07-25
+
+### Added
+
+- A 45-second round, between 30 and 60.
+- Light / dark / auto themes. A control top-left, drawn in the same style as the
+  sound toggle, cycles the three; "auto" follows the system and the choice is
+  remembered. Two palettes live in `theme.js`, threaded through
+  `theme-context.jsx`; `styles.js` became factories that take the active one.
+
+### Changed
+
+- The reels sit in a dark, lit-edged well, so the display stands out clearly
+  from whatever is behind it — the light panel or the dark one. The reels stay
+  a dark "clock face" in both themes; only the surrounding chrome changes.
+- "Clear" is now "Cancel", and is live only while you're part-way through a
+  pick — which is what sets it apart from Reset, that wipes the whole board.
+- Operator buttons match the number tiles' size, with larger signs.
+- A design pass over the whole button system, from a critical review. One
+  hierarchy — solid-accent primary, outline secondary, quiet-text tertiary,
+  segmented switch — replaces the mix of gradient blocks, ghost outlines and
+  ad-hoc styles. The cyan→violet gradients are gone; a solid accent is now the
+  one saturated element per screen, and it lands on the action that matters:
+  Submit and New Round are primary, the 30/45/60 picks are quiet cards.
+- Sizes snap to a 4px grid: tiles and operators 56, controls 44, picks 48,
+  toggles 36, and the `gap` scale cleaned up to 4/8/12/16/24.
+- Depth without noise, so the pared-back scheme doesn't read as flat: the
+  primary key has a single-hue tonal fill, a fine top sheen and a soft accent
+  glow (a lit surface, not the old two-hue diagonal); panels and cards carry a
+  hairline lit edge; the background glows faintly indigo at the top. Cancel is
+  boxed like its neighbours, just with the faintest border.
+- The "NUMBERS ROUND" subtitle is gone.
+
 ## [1.2.0] — 2026-07-24
 
 ### Added

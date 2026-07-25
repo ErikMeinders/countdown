@@ -1,9 +1,10 @@
-import { T } from "../theme.js";
+import { useTheme } from "../theme-context.jsx";
 
 // Drawn rather than an emoji: 🔊/🔇 render at a different size, weight and
 // colour on every platform, and on iOS they arrive in full colour, which is
 // the one thing on the screen that isn't part of the palette.
 export function SoundToggle({ muted, onToggle }) {
+  const T = useTheme();
   const stroke = muted ? T.dim : T.mutedLight;
 
   return (
@@ -12,8 +13,8 @@ export function SoundToggle({ muted, onToggle }) {
       aria-label={muted ? "Unmute" : "Mute"}
       aria-pressed={muted}
       style={{
-        position: "absolute", top: -2, right: 0,
-        width: 34, height: 34, borderRadius: T.r.md,
+        position: "absolute", top: 4, right: 0,
+        width: 36, height: 36, borderRadius: T.r.md,
         border: `1px solid ${T.panelBorder}`,
         background: "transparent",
         cursor: "pointer",

@@ -1,8 +1,9 @@
-import { T } from "../theme.js";
+import { useTheme } from "../theme-context.jsx";
 import { labelStyle } from "../styles.js";
 
 // Compact, alignable step list used in the side-by-side result panel
 export function StepColumn({ steps, label, align = "left", accent, target, empty }) {
+  const T = useTheme();
   const right = align === "right";
   const calc = new Set();
   const badge = (isCalc, isHit) => ({
@@ -20,7 +21,7 @@ export function StepColumn({ steps, label, align = "left", accent, target, empty
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
       <div style={{
-        ...labelStyle,
+        ...labelStyle(T),
         color: accent || T.muted,
         textAlign: right ? "right" : "left",
         marginBottom: 10,

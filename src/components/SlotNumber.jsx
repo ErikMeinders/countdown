@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { T } from "../theme.js";
+import { DISPLAY } from "../theme.js";
 import { REEL_START_MS } from "../constants.js";
 import {
   REEL_CELL, REEL_EASE, REEL_LOOPS, REEL_WIDTH,
@@ -9,30 +9,50 @@ import {
 const EASE = `cubic-bezier(${REEL_EASE.join(",")})`;
 
 // ── Slot reels ─────────────────────────────────────────────────
-// Each digit is a tall strip of numerals inside a fixed window. The strip
-// starts at the top and animates to the cell holding the final digit, so the
-// numerals blur past and decelerate into place. Reels are staggered and land
-// left to right, the way a fruit machine settles. The motion itself lives in
-// reels.js, because the rattle has to follow exactly the same curve.
+// A lit display, not a themed surface: dark faces and bright digits in either
+// theme, like a real countdown clock, so its colours come from DISPLAY rather
+// than the palette. Each digit is a strip of numerals inside a fixed window;
+// the motion lives in reels.js, because the rattle follows the same curve.
 
 // The window each digit sits in. Near-black so the lit digit has the most to
-// push against, with a bright rim and top bevel to lift it off the panel and
-// a dark outer shadow so it reads as a window rather than a flat patch. Kept
-// in step with the app icon (tools/make-icons.py).
+// push against, with a bright rim and top bevel to lift it off the well and a
+// dark outer shadow so it reads as a window. Kept in step with the app icon
+// (tools/make-icons.py).
 const reelFaceStyle = {
   background: "rgba(0,2,6,0.98)",
-  border: "1px solid rgba(255,255,255,0.32)",
+  border: "1px solid rgba(255,255,255,0.40)",
   borderRadius: 3,
   boxShadow:
-    "0 2px 6px rgba(0,0,0,0.55)," +          // lift off the panel
-    "inset 0 1px 0 rgba(255,255,255,0.14)," + // bevel highlight
+    "0 0 10px rgba(120,170,210,0.10)," +      // light spilling off the frame
+    "0 2px 6px rgba(0,0,0,0.6)," +            // lift off the well
+    "inset 0 1px 0 rgba(255,255,255,0.18)," + // bevel highlight
     "inset 0 0 16px rgba(0,0,0,0.85)",        // recess
   boxSizing: "border-box",
+};
+
+// A dark recessed well the reel cluster sits in, with a lit top edge. It gives
+// the reels a consistent frame that stands out from whatever is behind it —
+// the light panel in light mode, the dark one in dark — so the contrast the
+// user asked for holds in both.
+const reelWellStyle = {
+  display: "inline-flex", gap: 2, justifyContent: "center",
+  padding: "9px 11px",
+  borderRadius: 9,
+  background: "linear-gradient(180deg, #0b1019 0%, #05070d 100%)",
+  border: "1px solid rgba(255,255,255,0.09)",
+  boxShadow:
+    "inset 0 2px 12px rgba(0,0,0,0.78)," +   // recess
+    "0 1px 0 rgba(255,255,255,0.08)",         // lit top edge
 };
 
 // A digit sitting behind the glass glows faintly in its own colour, the way
 // the target does in the app.
 const reelGlow = (color) => `0 0 16px ${color}66`;
+
+// Wraps a reel cluster in the well.
+function ReelRow({ children }) {
+  return <div style={reelWellStyle}>{children}</div>;
+}
 
 // Shared by the spinning reel and the settled number, so the faces don't
 // change appearance the moment the reels stop.
@@ -124,47 +144,51 @@ export function SlotNumber({ value, onSettle }) {
   }, []);
 
   return (
-    <div style={{
-      display: "flex", justifyContent: "center", gap: 2,
-      height: REEL_CELL,
-      fontFamily: T.mono, fontSize: 50, fontWeight: 700,
-      color: T.text,
-      textShadow: reelGlow(T.text),
-    }}>
-      {digits.map((d, i) => (
-        <SlotDigit
-          key={i}
-          digit={d}
-          delay={REEL_START_MS + reelDelay(i)}
-          duration={reelDuration(i)}
-          onStop={i === digits.length - 1 ? finish : undefined}
-        />
-      ))}
-    </div>
+    <ReelRow>
+      <div style={{
+        display: "flex", justifyContent: "center", gap: 2,
+        height: REEL_CELL,
+        fontFamily: DISPLAY.mono, fontSize: 50, fontWeight: 700,
+        color: DISPLAY.text,
+        textShadow: reelGlow(DISPLAY.text),
+      }}>
+        {digits.map((d, i) => (
+          <SlotDigit
+            key={i}
+            digit={d}
+            delay={REEL_START_MS + reelDelay(i)}
+            duration={reelDuration(i)}
+            onStop={i === digits.length - 1 ? finish : undefined}
+          />
+        ))}
+      </div>
+    </ReelRow>
   );
 }
 
 // The same faces holding a number that isn't spinning — the settled target,
 // and the target on the result screen.
-export function StaticNumber({ value, color = T.text, textShadow = "none", animation = "none", fontSize = 50 }) {
+export function StaticNumber({ value, color = DISPLAY.text, textShadow = "none", animation = "none", fontSize = 50 }) {
   // Its own colour blooms behind the glass; any caller shadow (the urgency
   // halo) layers on top.
   const shadow = textShadow === "none" ? reelGlow(color) : `${textShadow}, ${reelGlow(color)}`;
   return (
-    <div style={{
-      height: REEL_CELL,
-      display: "flex", justifyContent: "center", gap: 2,
-      fontFamily: T.mono, fontSize, fontWeight: 700,
-      color, textShadow: shadow, animation,
-    }}>
-      {String(value).padStart(3, "0").split("").map((d, i) => (
-        <ReelFace key={i}>
-          <div style={{
-            height: REEL_CELL, lineHeight: `${REEL_CELL}px`,
-            textAlign: "center",
-          }}>{d}</div>
-        </ReelFace>
-      ))}
-    </div>
+    <ReelRow>
+      <div style={{
+        height: REEL_CELL,
+        display: "flex", justifyContent: "center", gap: 2,
+        fontFamily: DISPLAY.mono, fontSize, fontWeight: 700,
+        color, textShadow: shadow, animation,
+      }}>
+        {String(value).padStart(3, "0").split("").map((d, i) => (
+          <ReelFace key={i}>
+            <div style={{
+              height: REEL_CELL, lineHeight: `${REEL_CELL}px`,
+              textAlign: "center",
+            }}>{d}</div>
+          </ReelFace>
+        ))}
+      </div>
+    </ReelRow>
   );
 }
