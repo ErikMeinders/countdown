@@ -4,6 +4,22 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning is
 [semantic](https://semver.org/).
 
+## [1.3.0] — 2026-07-25
+
+### Added
+
+- A 45-second round, between 30 and 60.
+- Light / dark / auto themes. A control top-left, drawn in the same style as the
+  sound toggle, cycles the three; "auto" follows the system and the choice is
+  remembered. Two palettes live in `theme.js`, threaded through
+  `theme-context.jsx`; `styles.js` became factories that take the active one.
+
+### Changed
+
+- The reels sit in a dark, lit-edged well, so the display stands out clearly
+  from whatever is behind it — the light panel or the dark one. The reels stay
+  a dark "clock face" in both themes; only the surrounding chrome changes.
+
 ## [1.2.0] — 2026-07-24
 
 ### Added

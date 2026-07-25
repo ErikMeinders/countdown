@@ -1,11 +1,12 @@
-import { T } from "../theme.js";
+import { useTheme } from "../theme-context.jsx";
 import { labelStyle, numBadge, panelStyle } from "../styles.js";
 
 export function StepList({ steps, label, accent }) {
+  const T = useTheme();
   const calc = new Set();
   return (
-    <div style={panelStyle}>
-      <div style={{ ...labelStyle, color: accent || T.muted }}>{label}</div>
+    <div style={panelStyle(T)}>
+      <div style={{ ...labelStyle(T), color: accent || T.muted }}>{label}</div>
       {steps.map((s, i) => {
         const aIsCalc = calc.has(s.a);
         const bIsCalc = calc.has(s.b);
@@ -18,11 +19,11 @@ export function StepList({ steps, label, accent }) {
             padding: "4px 0",
             display: "flex", alignItems: "center", gap: 6, flexWrap: "wrap",
           }}>
-            <span style={numBadge(aIsCalc)}>{s.a}</span>
+            <span style={numBadge(T, aIsCalc)}>{s.a}</span>
             <span style={{ color: T.mutedLight }}>{s.op}</span>
-            <span style={numBadge(bIsCalc)}>{s.b}</span>
+            <span style={numBadge(T, bIsCalc)}>{s.b}</span>
             <span style={{ color: T.muted }}>=</span>
-            <span style={numBadge(true)}>{s.result}</span>
+            <span style={numBadge(T, true)}>{s.result}</span>
           </div>
         );
       })}

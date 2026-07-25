@@ -2,7 +2,7 @@
 export const LARGE_NUMBERS = [25, 50, 75, 100];
 export const SMALL_NUMBERS = [1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10];
 export const OPERATORS = ["+", "−", "×", "÷"];
-export const ROUND_LENGTHS = [30, 60];
+export const ROUND_LENGTHS = [30, 45, 60];
 
 export function shuffle(arr) {
   const a = [...arr];

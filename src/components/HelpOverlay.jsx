@@ -1,42 +1,43 @@
 import { useEffect } from "react";
-import { T } from "../theme.js";
+import { useTheme } from "../theme-context.jsx";
 import { labelStyle, primaryBtn } from "../styles.js";
 import { REDUCED } from "../constants.js";
 
-function Chip({ children, kind = "given" }) {
-  const map = {
-    given: { c: T.cyan, b: T.cyanDim, bd: T.cyan },
-    calc:  { c: T.orange, b: T.orangeDim, bd: T.orange },
-    op:    { c: T.gold, b: T.goldDim, bd: T.gold },
-  }[kind];
-  return (
-    <span style={{
-      display: "inline-block", padding: "1px 6px", margin: "0 1px",
-      borderRadius: T.r.sm, border: `1px solid ${map.bd}`,
-      background: map.b, color: map.c,
-      fontFamily: T.mono, fontSize: 12.5, fontWeight: 700,
-      whiteSpace: "nowrap",
-    }}>{children}</span>
-  );
-}
-
-function HelpSection({ title, children }) {
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <div style={{ ...labelStyle, color: T.cyan, marginBottom: 7 }}>{title}</div>
-      <div style={{ fontSize: 13.5, lineHeight: 1.65, color: T.textDim }}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
 export function HelpOverlay({ onClose }) {
+  const T = useTheme();
+
   useEffect(() => {
     const onKey = (e) => { if (e.key === "Escape") onClose(); };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  // Defined here so they pick up the active palette without prop threading.
+  const Chip = ({ children, kind = "given" }) => {
+    const map = {
+      given: { c: T.cyan, b: T.cyanDim, bd: T.cyan },
+      calc:  { c: T.orange, b: T.orangeDim, bd: T.orange },
+      op:    { c: T.gold, b: T.goldDim, bd: T.gold },
+    }[kind];
+    return (
+      <span style={{
+        display: "inline-block", padding: "1px 6px", margin: "0 1px",
+        borderRadius: T.r.sm, border: `1px solid ${map.bd}`,
+        background: map.b, color: map.c,
+        fontFamily: T.mono, fontSize: 12.5, fontWeight: 700,
+        whiteSpace: "nowrap",
+      }}>{children}</span>
+    );
+  };
+
+  const HelpSection = ({ title, children }) => (
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ ...labelStyle(T), color: T.cyan, marginBottom: 7 }}>{title}</div>
+      <div style={{ fontSize: 13.5, lineHeight: 1.65, color: T.textDim }}>
+        {children}
+      </div>
+    </div>
+  );
 
   const row = { display: "flex", gap: 8, marginBottom: 5 };
   const term = { color: T.text, fontWeight: 700, minWidth: 78, flexShrink: 0 };
@@ -158,12 +159,12 @@ export function HelpOverlay({ onClose }) {
           <div style={row}><span style={term}>Solvable</span>
             <span>A target built from your tiles, so an exact answer always
               exists.</span></div>
-          <div style={row}><span style={term}>30 / 60</span>
+          <div style={row}><span style={term}>30 / 45 / 60</span>
             <span>Seconds on the clock. It only starts once the target has
               finished rolling.</span></div>
         </HelpSection>
 
-        <button onClick={onClose} style={{ ...primaryBtn, width: "100%", padding: "13px 0" }}>
+        <button onClick={onClose} style={{ ...primaryBtn(T), width: "100%", padding: "13px 0" }}>
           Got it
         </button>
       </div>

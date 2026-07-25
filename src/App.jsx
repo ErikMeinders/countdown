@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { T } from "./theme.js";
+import { DISPLAY } from "./theme.js";
+import { useTheme } from "./theme-context.jsx";
 import { ghostBtn, labelStyle, panelStyle, primaryBtn } from "./styles.js";
 import {
   PHASES, PHASE_ORDER, REDUCED, REEL_START_MS, SWAP_MS, TILE_COUNT, TILE_DEAL_MS,
@@ -21,9 +22,11 @@ import { StepList } from "./components/StepList.jsx";
 import { TargetPanel } from "./components/TargetPanel.jsx";
 import { StaticNumber } from "./components/SlotNumber.jsx";
 import { SoundToggle } from "./components/SoundToggle.jsx";
+import { ThemeToggle } from "./components/ThemeToggle.jsx";
 
 // ── Main Game ──────────────────────────────────────────────────
 export default function CountdownGame() {
+  const T = useTheme();
   const [phase, setPhase] = useState(PHASES.PICK);
   const [displayPhase, setDisplayPhase] = useState(PHASES.PICK);
   const [anim, setAnim] = useState("in");        // "in" | "out"
@@ -332,6 +335,7 @@ export default function CountdownGame() {
           fontFamily: T.mono, fontSize: 9.5, letterSpacing: 4,
           color: T.muted, marginTop: 3,
         }}>NUMBERS ROUND</div>
+        <ThemeToggle />
         <SoundToggle
           muted={muted}
           onToggle={() => { const n = !muted; setMuted(n); Sound.setMuted(n); }}
@@ -356,13 +360,13 @@ export default function CountdownGame() {
           display: "flex", flexDirection: "column", alignItems: "center",
           gap: T.gap.xl, maxWidth: 400, width: "100%", marginTop: 24,
         }}>
-          <div style={panelStyle}>
-            <div style={{ ...labelStyle, textAlign: "center" }}>How many large numbers?</div>
+          <div style={panelStyle(T)}>
+            <div style={{ ...labelStyle(T), textAlign: "center" }}>How many large numbers?</div>
             <div style={{ display: "flex", justifyContent: "center", gap: T.gap.sm, marginBottom: 14 }}>
               {[0, 1, 2, 3, 4].map(n => (
                 <button key={n} onClick={() => setNumLarge(n)} style={{
                   width: 48, height: 48, borderRadius: T.r.md,
-                  border: `1.5px solid ${n === numLarge ? T.cyan : "rgba(255,255,255,0.09)"}`,
+                  border: `1.5px solid ${n === numLarge ? T.cyan : T.hair}`,
                   background: n === numLarge ? T.cyanDim : "transparent",
                   color: n === numLarge ? T.cyan : T.mutedLight,
                   fontSize: 19, fontWeight: 700, fontFamily: T.mono,
@@ -378,10 +382,10 @@ export default function CountdownGame() {
               marginTop: 18, paddingTop: 16,
               borderTop: `1px solid ${T.panelBorder}`,
             }}>
-              <div style={{ ...labelStyle, textAlign: "center" }}>Target</div>
+              <div style={{ ...labelStyle(T), textAlign: "center" }}>Target</div>
               <div style={{
                 display: "flex", gap: 6,
-                background: "rgba(255,255,255,0.03)",
+                background: T.surfaceLo,
                 borderRadius: T.r.md, padding: 4,
               }}>
                 {[
@@ -428,7 +432,7 @@ export default function CountdownGame() {
                   borderRadius: T.r.lg,
                   border: "none",
                   background: `linear-gradient(140deg, ${T.cyan}, ${T.violet})`,
-                  color: "#08101a",
+                  color: T.onAccent,
                   cursor: "pointer",
                   fontFamily: T.sans,
                   boxShadow: `0 4px 16px ${T.cyanGlow}`,
@@ -452,7 +456,7 @@ export default function CountdownGame() {
           <button
             onClick={() => setShowHelp(true)}
             style={{
-              ...ghostBtn,
+              ...ghostBtn(T),
               display: "flex", alignItems: "center", gap: 8,
               marginTop: -6,
             }}
@@ -590,9 +594,9 @@ export default function CountdownGame() {
           )}
 
           <div style={{ display: "flex", gap: T.gap.md }}>
-            <button onClick={resetAll} style={ghostBtn}>Reset</button>
-            <button onClick={() => { setCurrentA(null); setCurrentOp(null); }} style={ghostBtn}>Clear</button>
-            <button onClick={endRound} style={{ ...ghostBtn, borderColor: `${T.cyan}55`, color: T.cyan }}>
+            <button onClick={resetAll} style={ghostBtn(T)}>Reset</button>
+            <button onClick={() => { setCurrentA(null); setCurrentOp(null); }} style={ghostBtn(T)}>Clear</button>
+            <button onClick={endRound} style={{ ...ghostBtn(T), borderColor: `${T.cyan}55`, color: T.cyan }}>
               Submit
             </button>
           </div>
@@ -606,13 +610,13 @@ export default function CountdownGame() {
           gap: T.gap.lg, maxWidth: 420, width: "100%",
         }}>
           <div style={{
-            ...panelStyle,
+            ...panelStyle(T),
             textAlign: "center",
             border: `1px solid ${perfect ? `${T.gold}66` : T.panelBorder}`,
             animation: perfect ? "shimmer 2.4s ease-in-out infinite" : "none",
           }}>
-            <div style={labelStyle}>Target</div>
-            <StaticNumber value={target} color={perfect ? T.gold : T.cyan} fontSize={46} />
+            <div style={labelStyle(T)}>Target</div>
+            <StaticNumber value={target} color={perfect ? DISPLAY.gold : DISPLAY.cyan} fontSize={46} />
 
             {bestResult !== null && (
               <div style={{ marginTop: 10 }}>
@@ -639,8 +643,8 @@ export default function CountdownGame() {
           </div>
 
           {/* Recap: given numbers on top, solutions side by side below */}
-          <div style={panelStyle}>
-            <div style={{ ...labelStyle, textAlign: "center" }}>
+          <div style={panelStyle(T)}>
+            <div style={{ ...labelStyle(T), textAlign: "center" }}>
               Given numbers
               {numbers.length > 0 && (
                 <span style={{ color: T.dim, letterSpacing: 1 }}>
@@ -688,7 +692,7 @@ export default function CountdownGame() {
             <Legend />
           </div>
 
-          <button onClick={newGame} style={primaryBtn}>New Round</button>
+          <button onClick={newGame} style={primaryBtn(T)}>New Round</button>
         </div>
       )}
 

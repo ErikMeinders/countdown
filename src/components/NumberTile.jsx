@@ -1,7 +1,8 @@
 import { useRef } from "react";
-import { T } from "../theme.js";
+import { useTheme } from "../theme-context.jsx";
 
 export function NumberTile({ value, onClick, onDoubleClick, calculated, selected, compact, faded }) {
+  const T = useTheme();
   const color = calculated ? T.orange : T.cyan;
   const lastTap = useRef(0);
   const size = compact ? 46 : 58;
@@ -20,20 +21,20 @@ export function NumberTile({ value, onClick, onDoubleClick, calculated, selected
   };
 
   const faint = faded && !selected;
+  // Tint from the tile's own accent, so it deepens with the theme.
+  const tint = (c) => `linear-gradient(160deg, ${c}22, ${c}08)`;
 
   return (
     <button onClick={handleTap} style={{
       width: size, height: size, borderRadius: T.r.md,
       border: faint
-        ? `1.5px dashed rgba(255,255,255,0.13)`
+        ? `1.5px dashed ${T.hair}`
         : `1.5px solid ${selected ? T.gold : `${color}88`}`,
       background: faint
         ? "transparent"
         : selected
           ? T.goldDim
-          : calculated
-            ? "linear-gradient(160deg, rgba(232,150,75,0.14), rgba(232,150,75,0.04))"
-            : "linear-gradient(160deg, rgba(63,216,200,0.13), rgba(63,216,200,0.03))",
+          : tint(color),
       color: faint ? T.dim : selected ? T.gold : color,
       fontSize: compact ? 16 : 19,
       fontWeight: faint ? 500 : 700,

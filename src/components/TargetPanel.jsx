@@ -1,10 +1,12 @@
 import { useLayoutEffect, useRef, useState } from "react";
-import { T, urgencyColor } from "../theme.js";
+import { DISPLAY, urgencyColor } from "../theme.js";
+import { useTheme } from "../theme-context.jsx";
 import { labelStyle } from "../styles.js";
 import { SlotNumber, StaticNumber } from "./SlotNumber.jsx";
 
 // Timer drawn as a depleting stroke around the target card.
 export function TargetPanel({ target, seconds, total, running, finished, perfect, revealing, roundId, onRevealed }) {
+  const T = useTheme();
   const ref = useRef(null);
   const [size, setSize] = useState({ w: 0, h: 0 });
 
@@ -19,7 +21,9 @@ export function TargetPanel({ target, seconds, total, running, finished, perfect
   }, []);
 
   const pct = total > 0 ? Math.max(0, seconds) / total : 0;
-  const color = finished ? (perfect ? T.gold : T.cyan) : urgencyColor(pct);
+  // Ring and digit sit on the dark reel, so they read from DISPLAY, not the
+  // theme.
+  const color = finished ? (perfect ? DISPLAY.gold : DISPLAY.cyan) : urgencyColor(pct);
   const urgent = running && seconds <= 10;
   const critical = running && seconds <= 5;
 
@@ -39,12 +43,12 @@ export function TargetPanel({ target, seconds, total, running, finished, perfect
         boxSizing: "border-box",
         padding: "18px 24px 16px",
         borderRadius: T.r.lg,
-        // Lifted well clear of the near-black reel faces, so the digits read
-        // as lit windows set into the panel rather than holes in it.
+        // The reels carry their own dark well now; this panel is the themed
+        // surface behind it.
         background: `radial-gradient(120% 140% at 50% 0%, ${
-          finished && perfect ? "rgba(244,212,111,0.12)" : "rgba(255,255,255,0.075)"
-        } 0%, rgba(255,255,255,0.03) 60%)`,
-        border: "1px solid rgba(255,255,255,0.14)",
+          finished && perfect ? T.goldDim : T.surfaceHi
+        } 0%, ${T.surfaceLo} 60%)`,
+        border: `1px solid ${T.panelBorder}`,
         textAlign: "center",
         boxShadow: urgent ? `0 0 ${18 + (10 - seconds) * 3}px ${color}22` : "none",
         transition: "box-shadow 0.4s ease",
@@ -57,7 +61,7 @@ export function TargetPanel({ target, seconds, total, running, finished, perfect
         >
           <rect
             x={SW / 2} y={SW / 2} width={iw} height={ih} rx={r} ry={r}
-            fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth={SW}
+            fill="none" stroke={T.hairFaint} strokeWidth={SW}
           />
           {running && (
             <rect
@@ -81,7 +85,7 @@ export function TargetPanel({ target, seconds, total, running, finished, perfect
         display: "flex", alignItems: "center", justifyContent: "center",
         gap: 10, marginBottom: 2,
       }}>
-        <span style={{ ...labelStyle, marginBottom: 0 }}>Target</span>
+        <span style={{ ...labelStyle(T), marginBottom: 0 }}>Target</span>
         {running && (
           <span style={{
             fontFamily: T.mono, fontSize: 11, fontWeight: 700,
@@ -99,7 +103,7 @@ export function TargetPanel({ target, seconds, total, running, finished, perfect
       ) : (
         <StaticNumber
           value={target}
-          color={finished ? (perfect ? T.gold : T.cyan) : urgent ? color : T.text}
+          color={finished ? (perfect ? DISPLAY.gold : DISPLAY.cyan) : urgent ? color : DISPLAY.text}
           textShadow={urgent ? `0 0 22px ${color}55` : "none"}
           animation={critical ? "beat 1s ease-in-out infinite" : "none"}
         />
