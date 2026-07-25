@@ -5,7 +5,7 @@ export function NumberTile({ value, onClick, onDoubleClick, calculated, selected
   const T = useTheme();
   const color = calculated ? T.orange : T.cyan;
   const lastTap = useRef(0);
-  const size = compact ? 46 : 58;
+  const size = compact ? 48 : 56;
 
   const handleTap = (e) => {
     if (!onDoubleClick) { onClick?.(); return; }

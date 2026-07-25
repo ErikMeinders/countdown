@@ -10,7 +10,8 @@ const SHARED = {
   mono: "'JetBrains Mono', 'SFMono-Regular', Consolas, monospace",
   sans: "'Outfit', 'Segoe UI', 'Helvetica Neue', sans-serif",
   r: { sm: 6, md: 12, lg: 16, pill: 999 },
-  gap: { xs: 6, sm: 8, md: 12, lg: 18, xl: 26 },
+  // 4px grid: every gap is a multiple, so spacing lands consistently.
+  gap: { xs: 4, sm: 8, md: 12, lg: 16, xl: 24 },
 };
 
 export const PALETTES = {

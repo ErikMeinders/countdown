@@ -2,7 +2,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { DISPLAY } from "./theme.js";
 import { useTheme } from "./theme-context.jsx";
-import { ghostBtn, labelStyle, panelStyle, primaryBtn } from "./styles.js";
+import {
+  filledRowBtn, labelStyle, panelStyle, primaryBtn,
+  secondaryBtn, segmentedBox, segmentedItem, tertiaryBtn,
+} from "./styles.js";
 import {
   PHASES, PHASE_ORDER, REDUCED, REEL_START_MS, SWAP_MS, TILE_COUNT, TILE_DEAL_MS,
 } from "./constants.js";
@@ -322,19 +325,16 @@ export default function CountdownGame() {
       padding: "16px 12px 24px",
       display: "flex", flexDirection: "column", alignItems: "center",
     }}>
-      {/* Header */}
+      {/* Header — title centered, a toggle in each corner on its baseline */}
       <div style={{
         position: "relative", width: "100%", maxWidth: 420,
-        textAlign: "center", marginBottom: 16,
+        height: 44, marginBottom: 16,
+        display: "flex", alignItems: "center", justifyContent: "center",
       }}>
         <h1 style={{
           fontFamily: T.sans, fontSize: 26, fontWeight: 700, letterSpacing: 7, margin: 0,
           color: T.text, opacity: 0.92,
         }}>COUNTDOWN</h1>
-        <div style={{
-          fontFamily: T.mono, fontSize: 9.5, letterSpacing: 4,
-          color: T.muted, marginTop: 3,
-        }}>NUMBERS ROUND</div>
         <ThemeToggle />
         <SoundToggle
           muted={muted}
@@ -383,11 +383,7 @@ export default function CountdownGame() {
               borderTop: `1px solid ${T.panelBorder}`,
             }}>
               <div style={{ ...labelStyle(T), textAlign: "center" }}>Target</div>
-              <div style={{
-                display: "flex", gap: 6,
-                background: T.surfaceLo,
-                borderRadius: T.r.md, padding: 4,
-              }}>
+              <div style={segmentedBox(T)}>
                 {[
                   { v: false, label: "Authentic", hint: "may be unreachable" },
                   { v: true,  label: "Solvable",  hint: "always has an answer" },
@@ -396,15 +392,7 @@ export default function CountdownGame() {
                     key={label}
                     onClick={() => setSolvableOnly(v)}
                     title={hint}
-                    style={{
-                      flex: 1, padding: "9px 6px",
-                      borderRadius: T.r.sm, border: "none",
-                      background: solvableOnly === v ? T.cyanDim : "transparent",
-                      color: solvableOnly === v ? T.cyan : T.muted,
-                      fontFamily: T.sans, fontSize: 12.5,
-                      fontWeight: solvableOnly === v ? 700 : 500,
-                      cursor: "pointer", transition: "all 0.18s",
-                    }}
+                    style={segmentedItem(T, solvableOnly === v)}
                   >
                     {label}
                   </button>
@@ -427,26 +415,23 @@ export default function CountdownGame() {
                 key={len}
                 onClick={() => startGame(len)}
                 style={{
-                  flex: 1,
-                  padding: "14px 8px",
+                  flex: 1, height: 64,
                   borderRadius: T.r.lg,
-                  border: "none",
-                  background: `linear-gradient(140deg, ${T.cyan}, ${T.violet})`,
-                  color: T.onAccent,
+                  border: `1px solid ${T.hairStrong}`,
+                  background: T.surfaceHi,
                   cursor: "pointer",
                   fontFamily: T.sans,
-                  boxShadow: `0 4px 16px ${T.cyanGlow}`,
                   display: "flex", flexDirection: "column",
-                  alignItems: "center", gap: 1,
-                  transition: "transform 0.1s",
+                  alignItems: "center", justifyContent: "center", gap: 1,
+                  transition: "all 0.15s",
                 }}
               >
-                <span style={{ fontSize: 24, fontWeight: 900, lineHeight: 1, fontFamily: T.mono }}>
+                <span style={{ fontSize: 24, fontWeight: 900, lineHeight: 1, fontFamily: T.mono, color: T.text }}>
                   {len}
                 </span>
                 <span style={{
-                  fontSize: 9.5, fontWeight: 700, letterSpacing: 2.5,
-                  textTransform: "uppercase", opacity: 0.72,
+                  fontSize: 10, fontWeight: 700, letterSpacing: 2.5,
+                  textTransform: "uppercase", color: T.muted,
                 }}>
                   seconds
                 </span>
@@ -455,11 +440,7 @@ export default function CountdownGame() {
           </div>
           <button
             onClick={() => setShowHelp(true)}
-            style={{
-              ...ghostBtn(T),
-              display: "flex", alignItems: "center", gap: 8,
-              marginTop: -6,
-            }}
+            style={{ ...secondaryBtn(T), marginTop: -4 }}
           >
             <span style={{
               display: "inline-flex", alignItems: "center", justifyContent: "center",
@@ -538,8 +519,8 @@ export default function CountdownGame() {
           }}>
             <div style={{
               display: "grid",
-              gridTemplateColumns: "repeat(2, 58px)",
-              gridTemplateRows: "repeat(2, 58px)",
+              gridTemplateColumns: "repeat(2, 56px)",
+              gridTemplateRows: "repeat(2, 56px)",
               gap: T.gap.sm,
             }}>
               {OPERATORS.map(op => (
@@ -593,25 +574,24 @@ export default function CountdownGame() {
             </div>
           )}
 
-          <div style={{ display: "flex", gap: T.gap.md }}>
-            {/* Cancel only drops the pick you're part-way through, so it's
-                live only when there is one — which is what tells it apart from
-                Reset, that wipes the whole board. */}
+          <div style={{ display: "flex", gap: T.gap.sm }}>
+            {/* Three levels, so the row has a clear hierarchy: Cancel is the
+                lightest (quiet text, and live only mid-pick — which is what
+                sets it apart from Reset, that wipes the whole board), Reset is
+                outline, Submit is the filled commit action. */}
             <button
               onClick={() => { setCurrentA(null); setCurrentOp(null); }}
               disabled={currentA === null && currentOp === null}
               style={{
-                ...ghostBtn(T),
+                ...tertiaryBtn(T),
                 opacity: currentA === null && currentOp === null ? 0.4 : 1,
                 cursor: currentA === null && currentOp === null ? "default" : "pointer",
               }}
             >
               Cancel
             </button>
-            <button onClick={resetAll} style={ghostBtn(T)}>Reset</button>
-            <button onClick={endRound} style={{ ...ghostBtn(T), borderColor: `${T.cyan}55`, color: T.cyan }}>
-              Submit
-            </button>
+            <button onClick={resetAll} style={secondaryBtn(T)}>Reset</button>
+            <button onClick={endRound} style={filledRowBtn(T)}>Submit</button>
           </div>
         </div>
       )}

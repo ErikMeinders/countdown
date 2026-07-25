@@ -22,6 +22,15 @@ All notable changes to this project are documented here. The format follows
 - "Clear" is now "Cancel", and is live only while you're part-way through a
   pick — which is what sets it apart from Reset, that wipes the whole board.
 - Operator buttons match the number tiles' size, with larger signs.
+- A design pass over the whole button system, from a critical review. One
+  hierarchy — solid-accent primary, outline secondary, quiet-text tertiary,
+  segmented switch — replaces the mix of gradient blocks, ghost outlines and
+  ad-hoc styles. The cyan→violet gradients are gone; a solid accent is now the
+  one saturated element per screen, and it lands on the action that matters:
+  Submit and New Round are primary, the 30/45/60 picks are quiet cards.
+- Sizes snap to a 4px grid: tiles and operators 56, controls 44, picks 48,
+  toggles 36, and the `gap` scale cleaned up to 4/8/12/16/24.
+- The "NUMBERS ROUND" subtitle is gone.
 
 ## [1.2.0] — 2026-07-24
 

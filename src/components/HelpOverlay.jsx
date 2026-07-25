@@ -165,7 +165,7 @@ export function HelpOverlay({ onClose }) {
               finished rolling.</span></div>
         </HelpSection>
 
-        <button onClick={onClose} style={{ ...primaryBtn(T), width: "100%", padding: "13px 0" }}>
+        <button onClick={onClose} style={{ ...primaryBtn(T), width: "100%" }}>
           Got it
         </button>
       </div>

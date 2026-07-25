@@ -16,8 +16,8 @@ export function ThemeToggle() {
       onClick={() => setMode(NEXT[mode])}
       aria-label={`${LABEL[mode]} (tap to change)`}
       style={{
-        position: "absolute", top: -2, left: 0,
-        width: 34, height: 34, borderRadius: T.r.md,
+        position: "absolute", top: 4, left: 0,
+        width: 36, height: 36, borderRadius: T.r.md,
         border: `1px solid ${T.panelBorder}`,
         background: "transparent",
         cursor: "pointer",
