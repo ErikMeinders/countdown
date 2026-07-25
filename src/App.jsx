@@ -419,6 +419,7 @@ export default function CountdownGame() {
                   borderRadius: T.r.lg,
                   border: `1px solid ${T.hairStrong}`,
                   background: T.surfaceHi,
+                  boxShadow: `inset 0 1px 0 ${T.hair}`,   // lit top edge, like a key
                   cursor: "pointer",
                   fontFamily: T.sans,
                   display: "flex", flexDirection: "column",

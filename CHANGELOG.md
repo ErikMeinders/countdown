@@ -30,6 +30,11 @@ All notable changes to this project are documented here. The format follows
   Submit and New Round are primary, the 30/45/60 picks are quiet cards.
 - Sizes snap to a 4px grid: tiles and operators 56, controls 44, picks 48,
   toggles 36, and the `gap` scale cleaned up to 4/8/12/16/24.
+- Depth without noise, so the pared-back scheme doesn't read as flat: the
+  primary key has a single-hue tonal fill, a fine top sheen and a soft accent
+  glow (a lit surface, not the old two-hue diagonal); panels and cards carry a
+  hairline lit edge; the background glows faintly indigo at the top. Cancel is
+  boxed like its neighbours, just with the faintest border.
 - The "NUMBERS ROUND" subtitle is gone.
 
 ## [1.2.0] — 2026-07-24

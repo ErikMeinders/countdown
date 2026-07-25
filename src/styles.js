@@ -18,6 +18,18 @@ export const panelStyle = (T) => ({
   padding: 16,
   width: "100%",
   boxSizing: "border-box",
+  // A hairline of light along the top edge, so panels feel lit rather than
+  // printed on. Barely there, but it's what keeps the flat scheme from
+  // reading as dead.
+  boxShadow: `inset 0 1px 0 ${T.hairFaint}`,
+});
+
+// The primary key's fill: a single-hue vertical shade with a fine top sheen
+// and a soft accent shadow. Reads as a lit, physical surface — the depth the
+// flat solid was missing — without the two-hue diagonal that looked generic.
+const accentFill = (T) => ({
+  background: `linear-gradient(180deg, ${T.accentHi}, ${T.accentLo})`,
+  boxShadow: `0 2px 12px ${T.cyanGlow}, inset 0 1px 0 rgba(255,255,255,0.3)`,
 });
 
 export const labelStyle = (T) => ({
@@ -63,12 +75,12 @@ export const primaryBtn = (T) => ({
   height: 52,
   padding: "0 28px",
   border: "none",
-  background: T.cyan,           // solid — the one saturated element per screen
   color: T.onAccent,
   fontSize: 15,
   fontWeight: 700,
   letterSpacing: 1.5,
   textTransform: "uppercase",
+  ...accentFill(T),            // the one lit element per screen
 });
 
 export const secondaryBtn = (T) => ({
@@ -78,21 +90,23 @@ export const secondaryBtn = (T) => ({
   color: T.text,
 });
 
+// Boxed like the rest, but with the faintest border and muted text, so it's
+// clearly the lightest of the three without floating unframed.
 export const tertiaryBtn = (T) => ({
   ...btnBase(T),
-  border: "1px solid transparent",   // transparent, not none, so heights match
+  border: `1px solid ${T.panelBorder}`,
   background: "transparent",
   color: T.muted,
 });
 
-// A filled button at row height, so Submit reads as the commit action without
+// A filled key at row height, so Submit reads as the commit action without
 // standing taller than the outline buttons beside it.
 export const filledRowBtn = (T) => ({
   ...btnBase(T),
   border: "none",
-  background: T.cyan,
   color: T.onAccent,
   fontWeight: 700,
+  ...accentFill(T),
 });
 
 export const segmentedBox = (T) => ({
