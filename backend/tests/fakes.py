@@ -139,6 +139,22 @@ class FakeRepository(Repository):
             room.players[player_id].active = False
         return code, player_id
 
+    def reactivate_player(
+        self, code: str, connection_id: str, player_id: str, ttl_epoch_s: int
+    ) -> Room:
+        room = self.rooms.get(code)
+        if room is None or player_id not in room.players:
+            raise DomainError(ErrorCode.PLAYER_NOT_FOUND, "We couldn't find your player in this room.")
+        # Retire the player's other connections, exactly as the DynamoDB
+        # implementation does — otherwise the fake would let a bug through
+        # where a broadcast still reaches the dead socket.
+        for conn, (c, pid, active) in list(self.connections.items()):
+            if c == code and pid == player_id and conn != connection_id and active:
+                self.connections[conn] = (c, pid, False)
+        room.players[player_id].active = True
+        self.register_connection(code, connection_id, player_id, ttl_epoch_s)
+        return room
+
     def connections_for_room(self, code: str) -> dict[str, str]:
         return {
             player_id: conn

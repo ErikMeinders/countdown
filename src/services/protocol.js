@@ -14,6 +14,7 @@ export function nextRequestId() {
 export const ACTIONS = Object.freeze({
   CREATE_ROOM: "createRoom",
   JOIN_ROOM: "joinRoom",
+  RECONNECT: "reconnect",
   READY: "ready",
   SUBMIT_ANSWER: "submitAnswer",
   NEXT_ROUND: "nextRound",
@@ -24,6 +25,10 @@ export const ACTIONS = Object.freeze({
 export const SERVER = Object.freeze({
   ROOM_CREATED: "roomCreated",
   ROOM_JOINED: "roomJoined",
+  // The whole-room snapshot that answers `reconnect`. Not a diff: a client
+  // that missed two rounds can't be caught up by replaying frames it never got.
+  ROOM_STATE: "roomState",
+  PLAYER_RECONNECTED: "playerReconnected",
   PLAYER_JOINED: "playerJoined",
   READY_UPDATED: "readyUpdated",
   ROUND_STARTED: "roundStarted",
@@ -89,6 +94,7 @@ export const messages = Object.freeze({
   createRoom: (displayName, { bestOf, roundSeconds } = {}) =>
     build(ACTIONS.CREATE_ROOM, { displayName, bestOf, roundSeconds }),
   joinRoom: (roomCode, displayName) => build(ACTIONS.JOIN_ROOM, { roomCode, displayName }),
+  reconnect: (roomCode, playerId) => build(ACTIONS.RECONNECT, { roomCode, playerId }),
   ready: (roomCode, playerId) => build(ACTIONS.READY, { roomCode, playerId }),
   submitAnswer: (roomCode, playerId, roundNumber, expression, claimedResult) =>
     build(ACTIONS.SUBMIT_ANSWER, { roomCode, playerId, roundNumber, expression, claimedResult }),

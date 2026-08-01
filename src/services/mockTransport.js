@@ -12,13 +12,14 @@
 const PUZZLE = { numbers: [75, 50, 2, 3, 8, 7], target: 521 };
 
 export function createMockTransport() {
-  return ({ onState, onMessage }) => new MockTransport({ onState, onMessage });
+  return ({ onState, onMessage, onOpen }) => new MockTransport({ onState, onMessage, onOpen });
 }
 
 class MockTransport {
-  constructor({ onState, onMessage }) {
+  constructor({ onState, onMessage, onOpen }) {
     this._onState = onState;
     this._onMessage = onMessage;
+    this._onOpen = onOpen || (() => {});
     this._me = null;
     this._bot = { playerId: "bot", displayName: "Robo", isHost: false, ready: false, active: true };
     this._scores = { you: 0, bot: 0 };
@@ -28,7 +29,20 @@ class MockTransport {
   }
 
   connect() {
-    setTimeout(() => this._onState("connected"), 120);
+    // This whole module only runs behind ?mock=1 in dev, so the console handle
+    // can't reach a real player.
+    if (typeof window !== "undefined") window.mockDrop = () => this.drop();
+    setTimeout(() => {
+      this._onState("connected");
+      this._onOpen(); // same ordering as the real client, so the resume path runs here too
+    }, 120);
+  }
+
+  // Dev-only: pretend the socket dropped and came back, so the reconnect flow
+  // can be walked without unplugging anything. `mockDrop()` from the console.
+  drop() {
+    this._onState("reconnecting");
+    setTimeout(() => this.connect(), 400);
   }
   close() {
     this._onState("disconnected");
@@ -70,6 +84,8 @@ class MockTransport {
         return this._submit(payload);
       case "nextRound":
         return this._finalize();
+      case "reconnect":
+        return this._resume();
       default:
         return undefined; // ping etc.
     }
@@ -81,6 +97,21 @@ class MockTransport {
       playerId: "you",
       match: { bestOf: 5, winsNeeded: 3, capacity: 2, roundSeconds: 45 },
       room: this._room(),
+    });
+  }
+
+  // The snapshot the real backend answers `reconnect` with — same shape, so
+  // walking the resume here exercises the client's derivation for real.
+  _resume() {
+    if (!this._me) return;
+    this._emit("roomState", {
+      playerId: this._me.playerId,
+      match: { bestOf: 5, winsNeeded: 3, capacity: 2, roundSeconds: 45 },
+      room: this._room(),
+      serverTime: Date.now(),
+      round: this._current,
+      submission: this._mySub,
+      result: this._lastResult || null,
     });
   }
 
@@ -100,6 +131,7 @@ class MockTransport {
     this._me.ready = false;
     this._bot.ready = false;
     this._mySub = null;
+    this._lastResult = null; // a new round supersedes the last result
     const now = Date.now();
     this._current = {
       roomCode: "TEST",
@@ -151,7 +183,8 @@ class MockTransport {
     const target = this._current.target;
     const numbers = this._current.numbers;
     this._current = null;
-    this._emit("roundResult", {
+    // Kept so a resume mid-result replays it, as the backend's snapshot does.
+    this._lastResult = {
       roomCode: "TEST",
       roundNumber: this._round,
       target,
@@ -163,6 +196,7 @@ class MockTransport {
       scores: { ...this._scores },
       matchComplete,
       matchWinnerId: matchComplete ? winnerId : null,
-    });
+    };
+    this._emit("roundResult", this._lastResult);
   }
 }

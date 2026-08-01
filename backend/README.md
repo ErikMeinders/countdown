@@ -79,6 +79,7 @@ backend/
 | `$disconnect` | in | Mark the player's connection inactive; keep the player |
 | `createRoom` | in | Open a room, become host |
 | `joinRoom` | in | Join by room code |
+| `reconnect` | in | Rebind a dropped player to a new socket; replies with a room snapshot |
 | `ready` | in | Mark ready; the round starts when all active players are ready |
 | `submitAnswer` | in | Submit an expression; server validates and scores |
 | `nextRound` | in | Advance a finished round to the next lobby |
@@ -341,10 +342,13 @@ AWS.
   expires before both players submit is finalised on the next interaction
   (`nextRound`, a late `submitAnswer`, …). A natural next step is a per-round
   EventBridge Scheduler callback that finalises exactly at `endsAt`.
-- **No reconnect flow yet.** `$disconnect` marks the player inactive and keeps
-  them (and the room) until TTL, and the data model carries a per-connection
-  index, so a `reconnect` action keyed on player ID / a reconnect token can be
-  added without a schema change.
+- **Reconnect is keyed on the player ID**, not a token. `$disconnect` keeps the
+  player and the room until TTL; `reconnect` marks them active again, retires
+  their stale connection rows, and returns a whole-room snapshot. The player ID
+  is unguessable but not a credential — you would need the room code *and* it,
+  against a room that expires within the hour. A real token would mean
+  persisting a secret in the browser, which the client deliberately avoids. If
+  rooms ever outlive a party, revisit this.
 - **Two players.** `capacity` is a first-class field and the roster is a map, so
   raising it is a config change plus a readiness/scoring review, not a rewrite.
 - **Ties score nobody.** An exact tie awards no round win; a match of nothing but

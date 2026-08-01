@@ -106,5 +106,17 @@ class Repository(ABC):
         """
 
     @abstractmethod
+    def reactivate_player(
+        self, code: str, connection_id: str, player_id: str, ttl_epoch_s: int
+    ) -> Room:
+        """Rebind a returning player to a new connection.
+
+        Marks the player active again, retires any connection items they still
+        own (a dropped socket is not always reported before the new one
+        arrives, and two live rows for one player would make broadcasting
+        order-dependent), and registers the new one. Returns the updated room.
+        """
+
+    @abstractmethod
     def connections_for_room(self, code: str) -> dict[str, str]:
         """Active ``player_id -> connection_id`` map, for broadcasting."""

@@ -88,8 +88,40 @@ function applyServer(state, message) {
         match: payload.match,
       };
 
+    // A whole-room snapshot, in reply to `reconnect`. The phase is derived
+    // here rather than sent by the server: the server knows the room's state,
+    // but which screen that means is a client concern, and it is already
+    // spelled out in this file for the live path.
+    case SERVER.ROOM_STATE: {
+      const { room, match, round, submission, result, playerId } = payload;
+      const matchComplete = result?.matchComplete || room?.status === "COMPLETED";
+      let phase = Phase.LOBBY;
+      if (matchComplete) phase = Phase.MATCH_COMPLETE;
+      else if (result) phase = Phase.ROUND_RESULT;
+      else if (round && round.status === "ACTIVE") phase = Phase.PLAYING;
+
+      return {
+        ...state,
+        error: null,
+        phase,
+        playerId: playerId || state.playerId,
+        room: room || state.room,
+        match: match || state.match,
+        // Only a live round is worth restoring; a completed one is described
+        // by `result`, and keeping it would leave a dead clock on screen.
+        round: phase === Phase.PLAYING ? round : null,
+        result: result || null,
+        // Their own best answer survives the drop, so the round doesn't look
+        // like it was thrown away — but it is `accepted`, not `submitting`.
+        submission: submission
+          ? { state: SubmissionState.ACCEPTED, best: submission, error: null }
+          : resetSubmission(),
+      };
+    }
+
     case SERVER.PLAYER_JOINED:
     case SERVER.READY_UPDATED:
+    case SERVER.PLAYER_RECONNECTED:
     case SERVER.PLAYER_DISCONNECTED:
       return { ...state, room: payload.room || state.room };
 

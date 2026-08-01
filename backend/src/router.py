@@ -21,6 +21,7 @@ from handlers import (
     next_round,
     ping,
     ready,
+    reconnect,
     submit_answer,
 )
 from logging_config import get_logger, log
@@ -42,6 +43,7 @@ ROUTES = {
     "createRoom": create_room.handle,
     "joinRoom": join_room.handle,
     "ready": ready.handle,
+    "reconnect": reconnect.handle,
     "submitAnswer": submit_answer.handle,
     "nextRound": next_round.handle,
     "ping": ping.handle,

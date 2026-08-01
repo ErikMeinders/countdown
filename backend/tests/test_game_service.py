@@ -221,3 +221,118 @@ def test_disconnect_marks_player_inactive_and_notifies_others():
     assert room.players[a].active is True  # the other player survives
     notice = h.notifier.last_of_type("playerDisconnected")
     assert notice["payload"]["playerId"] == b
+
+
+# ── Reconnect ──────────────────────────────────────────────────────────────
+# A dropped socket used to strand a player: the room kept them until TTL, but
+# nothing could bind a new connection to the seat they still held.
+
+
+def test_reconnect_rebinds_the_player_and_returns_a_snapshot():
+    h = Harness()
+    code, a = h.create("connA", "Alice")
+    b = h.join("connB", code, "Bob")
+    h.game.disconnect("connB")
+
+    h.game.reconnect(h.req("connB2", "reconnect", {"roomCode": code, "playerId": b}))
+
+    room = h.repo.get_room(code)
+    assert room.players[b].active is True
+    snapshot = h.notifier.last_of_type("roomState")["payload"]
+    assert snapshot["playerId"] == b
+    assert snapshot["room"]["code"] == code
+    assert snapshot["match"]["bestOf"] == 5
+    assert snapshot["serverTime"] == h.now[0]
+    # Nothing in flight, so nothing to resume into.
+    assert snapshot["round"] is None and snapshot["result"] is None
+    # The other player is told, so their roster stops showing a dropped peer.
+    assert h.notifier.last_of_type("playerReconnected")["payload"]["playerId"] == b
+
+
+def test_reconnect_during_a_live_round_returns_the_round_and_own_submission():
+    h = Harness()
+    code, a = h.create("connA", "Alice")
+    b = h.join("connB", code, "Bob")
+    h.ready("connA", code, a)
+    h.ready("connB", code, b)
+    started = h.notifier.last_of_type("roundStarted")["payload"]
+    h.submit("connB", code, b, started["roundNumber"], str(started["numbers"][0]))
+
+    h.game.disconnect("connB")
+    h.game.reconnect(h.req("connB2", "reconnect", {"roomCode": code, "playerId": b}))
+
+    snapshot = h.notifier.last_of_type("roomState")["payload"]
+    assert snapshot["round"]["roundNumber"] == started["roundNumber"]
+    assert snapshot["round"]["target"] == started["target"]
+    assert snapshot["round"]["endsAt"] == started["endsAt"]
+    # Their own best answer comes back, so the board isn't silently reset.
+    assert snapshot["submission"]["expression"] == str(started["numbers"][0])
+    # And never the opponent's — that would leak an answer mid-round.
+    assert "submissions" not in snapshot["round"]
+    assert snapshot["result"] is None
+
+
+def test_reconnect_after_a_missed_result_replays_it():
+    h = Harness()
+    code, a = h.create("connA", "Alice")
+    b = h.join("connB", code, "Bob")
+    h.ready("connA", code, a)
+    h.ready("connB", code, b)
+    started = h.notifier.last_of_type("roundStarted")["payload"]
+
+    h.game.disconnect("connB")
+    # Alice answers alone; the deadline passes and the round is finalised while
+    # Bob is away, so he never sees the roundResult broadcast.
+    h.submit("connA", code, a, started["roundNumber"], str(started["numbers"][0]))
+    h.now[0] = started["endsAt"] + 10_000
+    h.game.next_round(h.req("connA", "nextRound", {"roomCode": code, "playerId": a}))
+    assert h.notifier.last_of_type("roundResult") is not None
+
+    h.game.reconnect(h.req("connB2", "reconnect", {"roomCode": code, "playerId": b}))
+
+    snapshot = h.notifier.last_of_type("roomState")["payload"]
+    result = snapshot["result"]
+    assert result is not None
+    assert result["roundNumber"] == started["roundNumber"]
+    assert result["winnerId"] == a
+    assert result["scores"][a] == 1
+    # The replayed result matches the one broadcast live — same builder.
+    live = h.notifier.last_of_type("roundResult")["payload"]
+    assert result == live
+
+
+def test_reconnect_retires_the_previous_connection():
+    h = Harness()
+    code, a = h.create("connA", "Alice")
+    b = h.join("connB", code, "Bob")
+
+    # No disconnect first: the new socket often arrives before API Gateway
+    # reports the old one gone.
+    h.game.reconnect(h.req("connB2", "reconnect", {"roomCode": code, "playerId": b}))
+
+    live = h.repo.connections_for_room(code)
+    assert live[b] == "connB2"
+    assert "connB" not in live.values()
+
+
+def test_reconnect_rejects_a_stranger_and_an_unknown_room():
+    h = Harness()
+    code, a = h.create("connA", "Alice")
+
+    with pytest.raises(DomainError) as not_member:
+        h.game.reconnect(h.req("connX", "reconnect", {"roomCode": code, "playerId": "p_nobody"}))
+    assert not_member.value.code == ErrorCode.NOT_A_MEMBER
+
+    with pytest.raises(DomainError) as no_room:
+        h.game.reconnect(h.req("connX", "reconnect", {"roomCode": "ZZZZ", "playerId": a}))
+    assert no_room.value.code == ErrorCode.ROOM_NOT_FOUND
+
+
+def test_reconnect_rejects_an_expired_room():
+    h = Harness()
+    code, a = h.create("connA", "Alice")
+    h.now[0] += (h.config.room_ttl_seconds + 60) * 1000
+
+    with pytest.raises(DomainError) as exc:
+        h.game.reconnect(h.req("connA2", "reconnect", {"roomCode": code, "playerId": a}))
+    assert exc.value.code == ErrorCode.ROOM_EXPIRED

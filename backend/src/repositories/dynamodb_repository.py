@@ -355,6 +355,52 @@ class DynamoDbRepository:
                 raise
         return code, player_id
 
+    def reactivate_player(
+        self, code: str, connection_id: str, player_id: str, ttl_epoch_s: int
+    ) -> Room:
+        # Retire the player's existing connection rows first. A phone that
+        # loses signal often opens the new socket before API Gateway reports
+        # the old one gone, so without this the room briefly holds two live
+        # connections for one player and which of them a broadcast reaches
+        # depends on query order.
+        resp = self._table.query(
+            KeyConditionExpression=Key("PK").eq(keys.room_pk(code)) & Key("SK").begins_with("CONN#"),
+            FilterExpression="#active = :true AND playerId = :pid",
+            ExpressionAttributeNames={"#active": "active"},
+            ExpressionAttributeValues={":true": True, ":pid": player_id},
+        )
+        for item in resp.get("Items", []):
+            if item["connectionId"] == connection_id:
+                continue
+            self._table.update_item(
+                Key={"PK": item["PK"], "SK": item["SK"]},
+                UpdateExpression="SET #active = :false REMOVE GSI1PK, GSI1SK",
+                ExpressionAttributeNames={"#active": "active"},
+                ExpressionAttributeValues={":false": False},
+            )
+
+        # Mark the player active again. Gated on the player still existing, so
+        # a reconnect against a reaped room fails loudly rather than resurrecting
+        # a ghost.
+        try:
+            self._table.update_item(
+                Key={"PK": keys.room_pk(code), "SK": keys.meta_sk()},
+                UpdateExpression="SET players.#pid.#active = :true",
+                ConditionExpression="attribute_exists(players.#pid)",
+                ExpressionAttributeNames={"#pid": player_id, "#active": "active"},
+                ExpressionAttributeValues={":true": True},
+            )
+        except ClientError as exc:
+            if exc.response["Error"]["Code"] == "ConditionalCheckFailedException":
+                raise DomainError(ErrorCode.PLAYER_NOT_FOUND, "We couldn't find your player in this room.") from exc
+            raise
+
+        self.register_connection(code, connection_id, player_id, ttl_epoch_s)
+        room = self.get_room(code)
+        if room is None:
+            raise DomainError(ErrorCode.ROOM_NOT_FOUND, "The requested room does not exist.")
+        return room
+
     def connections_for_room(self, code: str) -> dict[str, str]:
         resp = self._table.query(
             KeyConditionExpression=Key("PK").eq(keys.room_pk(code)) & Key("SK").begins_with("CONN#"),

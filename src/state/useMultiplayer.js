@@ -30,12 +30,16 @@ function saveName(name) {
 }
 function saveSession(session) {
   try {
-    // Only non-secret reconnect hints — never tokens or logs.
+    // Only non-secret reconnect hints — never tokens or logs. The player ID is
+    // what `reconnect` is keyed on: unguessable enough for a room that expires
+    // within the hour, and not a credential, so this stays a hint rather than
+    // something worth stealing.
     sessionStorage.setItem(SESSION_KEY, JSON.stringify(session));
   } catch {
     /* private mode */
   }
 }
+
 function clearSession() {
   try {
     sessionStorage.removeItem(SESSION_KEY);
@@ -54,9 +58,28 @@ export function useMultiplayer({ createTransport } = {}) {
     if (clientRef.current) return clientRef.current;
     const onState = (s) => dispatch({ type: "CONNECTION", state: s });
     const onMessage = (m) => dispatch({ type: "SERVER", message: m });
+    // Every time the socket opens — the first time, and after every backoff
+    // retry — announce who we are if we were in a room. The server rebinds the
+    // seat and replies with a snapshot; the reducer restores the phase from it.
+    //
+    // Driven off the socket rather than off React state on purpose: a drop is
+    // a transport event, and the alternative (an effect watching
+    // connectionState) fires a frame late, after the queue has already been
+    // flushed at a server that doesn't know who we are.
+    // Deliberately reads live state and not the stored session: on the *first*
+    // open the queue already holds a createRoom or joinRoom, and a stale
+    // session from an earlier room in this tab would send a reconnect ahead of
+    // it — resuming a room the player has left, or erroring on one that has
+    // since expired. Restoring across a page reload needs an explicit "resume
+    // your room?" affordance, which is a separate piece of work.
+    const onOpen = () => {
+      const { room, playerId } = stateRef.current;
+      if (!room || !playerId) return;
+      clientRef.current?.send(messages.reconnect(room.code, playerId));
+    };
     clientRef.current = createTransport
-      ? createTransport({ onState, onMessage })
-      : new WebSocketClient(getWebSocketUrl(), { onState, onMessage });
+      ? createTransport({ onState, onMessage, onOpen })
+      : new WebSocketClient(getWebSocketUrl(), { onState, onMessage, onOpen });
     return clientRef.current;
   }, [createTransport]);
 

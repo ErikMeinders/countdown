@@ -105,4 +105,37 @@ describe("WebSocketClient", () => {
     vi.advanceTimersByTime(30000);
     expect(FakeSocket.instances.length).toBe(1); // no reconnect attempted
   });
+
+  // ── onOpen, the hook the resume hangs off ────────────────────
+
+  it("calls onOpen on every open, including after a drop", () => {
+    const opens = [];
+    const { client } = makeClient({ onOpen: () => opens.push(1) });
+    client.connect();
+    FakeSocket.instances[0]._open();
+    expect(opens).toHaveLength(1);
+
+    vi.useFakeTimers();
+    FakeSocket.instances[0].close();
+    vi.advanceTimersByTime(30000); // past the bounded backoff
+    FakeSocket.instances[1]._open();
+    expect(opens).toHaveLength(2);
+  });
+
+  it("sends what onOpen queues before the backlog", () => {
+    // The resume has to reach the server before a submitAnswer the player
+    // tapped while the socket was down, or that answer arrives from a
+    // connection the server cannot place.
+    const { client } = makeClient({
+      onOpen: () => client.send({ action: "reconnect", requestId: "rc", payload: {} }),
+    });
+    client.connect();
+    client.send({ action: "submitAnswer", requestId: "s1", payload: {} });
+    const socket = FakeSocket.instances[0];
+    expect(socket.sent).toHaveLength(0);
+
+    socket._open();
+    const actions = socket.sent.map((d) => JSON.parse(d).action);
+    expect(actions).toEqual(["reconnect", "submitAnswer"]);
+  });
 });
