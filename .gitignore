@@ -13,3 +13,6 @@ __pycache__/
 .venv/
 .env
 *.env
+
+# generated design-system bundle (tools/design-system/build.mjs)
+tools/design-system/out/
