@@ -97,6 +97,17 @@ export function HelpOverlay({ onClose }) {
           or get as close as you can before the clock runs out.
         </HelpSection>
 
+        <HelpSection title="Two ways to play">
+          <div style={row}><span style={term}>Single</span>
+            <span>Play on this device — no connection needed, works offline.</span></div>
+          <div style={row}><span style={term}>Together</span>
+            <span>Create a room and play the same puzzles against a friend over
+              the internet.</span></div>
+          <div style={{ fontSize: 12.5, color: T.muted, marginTop: 6 }}>
+            The board and the rules below are the same in both.
+          </div>
+        </HelpSection>
+
         <HelpSection title="The rules">
           <div style={row}><span style={term}>Once each</span>
             <span>Every number can be used only once.</span></div>
@@ -143,11 +154,40 @@ export function HelpOverlay({ onClose }) {
             <span>Ends the round early and scores where you got to.</span></div>
         </HelpSection>
 
-        <HelpSection title="Scoring">
+        <HelpSection title="Scoring — solo">
           <div style={row}><span style={term}>Exact</span><span>10 points</span></div>
           <div style={row}><span style={term}>Within 5</span><span>7 points</span></div>
           <div style={row}><span style={term}>Within 10</span><span>5 points</span></div>
           <div style={row}><span style={term}>Further off</span><span>nothing</span></div>
+          <div style={{ fontSize: 12.5, color: T.muted, marginTop: 6 }}>
+            A solo session runs several rounds; the points add up to a total. In
+            a together game there are no points — rounds are won outright (below).
+          </div>
+        </HelpSection>
+
+        <HelpSection title="Playing together">
+          <div style={row}><span style={term}>Create</span>
+            <span>Tap <Chip kind="op">Together</Chip> → <em style={{ color: T.text, fontStyle: "normal" }}>Create room</em>{" "}
+              to get a short code and a QR code to share.</span></div>
+          <div style={row}><span style={term}>Join</span>
+            <span>The other player scans the QR (or enters the code) and picks a
+              name.</span></div>
+          <div style={row}><span style={term}>Ready</span>
+            <span>Everyone taps <em style={{ color: T.text, fontStyle: "normal" }}>I'm ready</em>.
+              When all are ready the <em style={{ color: T.text, fontStyle: "normal" }}>same</em> puzzle
+              appears for everyone at once.</span></div>
+          <div style={row}><span style={term}>Solve</span>
+            <span>You each solve on your own device. Submit before the clock
+              ends — you can keep improving your answer until then.</span></div>
+          <div style={row}><span style={term}>Reveal</span>
+            <span>When time's up the answers are shown side by side, with the
+              computer's best line last.</span></div>
+          <div style={row}><span style={term}>Win it</span>
+            <span>The closest valid answer wins the round. First to win the
+              majority takes the match — best of 3, 5 or 7.</span></div>
+          <div style={{ fontSize: 12.5, color: T.muted, marginTop: 6 }}>
+            The person icon at the top returns you to solo play at any time.
+          </div>
         </HelpSection>
 
         <HelpSection title="Before you start">
@@ -160,9 +200,12 @@ export function HelpOverlay({ onClose }) {
           <div style={row}><span style={term}>Solvable</span>
             <span>A target built from your tiles, so an exact answer always
               exists.</span></div>
-          <div style={row}><span style={term}>30 / 45 / 60</span>
-            <span>Seconds on the clock. It only starts once the target has
-              finished rolling.</span></div>
+          <div style={row}><span style={term}>Round length</span>
+            <span>Seconds on the clock — 30, 45 or 60. It only starts once the
+              target has finished rolling.</span></div>
+          <div style={row}><span style={term}>Rounds</span>
+            <span>Solo: how many rounds a session lasts. Together: best-of, so
+              3, 5 or 7 decides the match.</span></div>
         </HelpSection>
 
         <button onClick={onClose} style={{ ...primaryBtn(T), width: "100%" }}>

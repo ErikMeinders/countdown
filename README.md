@@ -32,16 +32,115 @@ src/
   constants.js           Phases, and the reduced-motion switch
   sound.js               Tone.js engine — every call is failure-tolerant
   sw-template.js         Service worker source (see below)
+  Shell.jsx              Mode selection (local vs multiplayer) + deep links
+  routing.js             Hash-based /#/join/CODE deep-link parsing
   game/
     rules.js             Tile and target generation, the four operations
     solver.js            Exhaustive search for the best line
     trace.js             Walks a result back to the tiles that made it
+    shared/              Pure logic reused by multiplayer (calculator, expression, timing)
+    multiplayer/         Result-card ordering
+  screens/               Home + multiplayer/ screens (lobby, round, results…)
+  services/              config, protocol, WebSocket client, dev mock transport
+  state/                 Multiplayer reducer state-machine + useMultiplayer hook
   components/            One component per file, all presentational
+    mp/                  Multiplayer-only widgets (QR, score pips, result cards…)
   styles/animations.css  Keyframes and the few global rules
 public/                  Icons, manifest, .nojekyll — copied verbatim
-test/                    Vitest
-deploy/aws/              Optional S3 + CloudFront target
+test/                    Vitest (test/mp/ covers multiplayer)
+backend/                 Serverless multiplayer backend (see backend/README.md)
+deploy/aws/              Optional S3 + CloudFront target for the frontend
 ```
+
+## Two modes: local and together
+
+The app opens on a mode choice:
+
+- **Play locally** — the original single-player game. All puzzle generation,
+  solving, validation, timing and scoring stay on the device; no backend, works
+  fully offline once the PWA is installed. This code path never opens a socket.
+- **Play together** — a server-backed room: one player creates a room, others
+  join by QR code or a four-character code, everyone gets the *same*
+  server-generated puzzle, solves independently, and the results reveal
+  together. Best of five. Needs the backend and a network connection.
+
+The two are separate subtrees, so a multiplayer connectivity problem can never
+affect local play.
+
+### Configuring the multiplayer backend
+
+The multiplayer endpoint is a build-time variable (Vite convention,
+`VITE_` prefix). With it unset the app still runs — "Play together" is disabled
+with an explanation and local play is untouched.
+
+```bash
+cd backend
+export AWS_PROFILE=my-profile
+make deploy
+export COUNTDOWN_WEBSOCKET_URL="$(make -s websocket-url)"
+cd ..
+
+printf 'VITE_COUNTDOWN_WEBSOCKET_URL=%s\n' "$COUNTDOWN_WEBSOCKET_URL" > .env.local
+
+npm install
+npm run dev
+```
+
+`.env.local` is git-ignored (via `*.local`); commit only `.env.example`, which
+holds a placeholder. See [`backend/README.md`](backend/README.md) for deploying
+the backend and retrieving the URL.
+
+**Environments.** The backend template is environment-parameterised, so `dev`
+and `prod` are independent stacks — separate tables and separate URLs:
+
+```bash
+cd backend && export AWS_PROFILE=…
+make deploy ENVIRONMENT=prod STACK_NAME=countdown-backend-prod
+```
+
+The published site (GitHub Pages, from `main`) is built against the **prod**
+backend. Its URL lives in the `VITE_COUNTDOWN_WEBSOCKET_URL` GitHub Actions
+variable (repo Settings → Secrets and variables → Actions) and is injected into
+the Pages build — never committed. Local development points at the **dev** stack
+through your `.env.local`, so infra changes can be shaken out without touching
+prod.
+
+### How QR joining works
+
+The lobby shows a QR code and a copyable link. The link is a normal HTTPS URL of
+the form `https://<host>/<base>/#/join/ABCD` — a **hash** route on purpose: the
+app is served from a sub-path with a relative asset base, so a real
+`/join/ABCD` path would break asset loading on static hosting and require an SPA
+fallback. The hash keeps the document at the app root and needs no server
+config, so deep links work on GitHub Pages, CloudFront, and offline. Scanning
+opens the app straight into the join screen with the code pre-filled.
+
+### Testing two players
+
+- **Two windows/devices:** open the app, **Play together → Create room**, then
+  scan the QR (or open the copied link) on a second device or a second browser
+  window, and **Join**. Both mark ready to start.
+- **One browser, no backend:** run `npm run dev` and open
+  `http://localhost:5173/?mock=1`. A scripted opponent ("Robo") joins, readies,
+  and answers, so you can walk the whole flow — create, lobby, round, results,
+  match win — solo. Mock mode is dev-only and never in a production build.
+
+### Offline & reconnection limitations
+
+- **Offline:** local play works fully offline. The multiplayer *screens* load
+  from the cached app shell, but multiplayer *actions* need a connection and say
+  so; the service worker never caches WebSocket traffic.
+- **Reconnection:** on a transient drop the client keeps the UI visible, shows a
+  reconnecting indicator, and retries with bounded backoff. **Full room-state
+  resumption is not supported yet** — the backend has no reconnect route or
+  room-snapshot response, so a reconnected socket can't re-bind to the existing
+  player. If reconnection doesn't recover, use **Try again** / **Leave**. This
+  is a documented backend/frontend protocol gap, not a client bug.
+- **Deadline finalisation is lazy** on the backend, so a round where one player
+  never answers is finalised on the next interaction; the client nudges this
+  automatically at the deadline.
+- **No in-place rematch** yet: at match end, **New game** returns to the
+  multiplayer landing to create a fresh room rather than faking a restart.
 
 ## Notes
 
