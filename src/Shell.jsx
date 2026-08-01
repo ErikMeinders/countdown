@@ -68,12 +68,16 @@ export default function Shell() {
           alignItems: "center",
         }}
       >
-        <MultiplayerApp
-          initialJoinCode={joinCode}
-          createParams={createParams}
-          createTransport={isMock ? createMockTransport() : undefined}
-          onExit={backToSingle}
-        />
+        {/* Stretch, so MpFrame can pin its header to the top and centre the
+            body in what's left — the same shape as the local game. */}
+        <div style={{ width: "100%", flex: 1, display: "flex", justifyContent: "center" }}>
+          <MultiplayerApp
+            initialJoinCode={joinCode}
+            createParams={createParams}
+            createTransport={isMock ? createMockTransport() : undefined}
+            onExit={backToSingle}
+          />
+        </div>
       </div>
     );
   }

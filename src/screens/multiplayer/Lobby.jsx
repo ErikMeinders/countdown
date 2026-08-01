@@ -108,7 +108,7 @@ export function Lobby({ room, match, playerId, connectionState, onReady, onLeave
         onClick={() => setShowHelp(true)}
         style={{
           alignSelf: "center", background: "none", border: "none",
-          color: T.muted, fontFamily: T.sans, fontSize: 13, cursor: "pointer",
+          color: T.muted, fontFamily: T.sans, fontSize: T.type.sm, cursor: "pointer",
           textDecoration: "underline", textUnderlineOffset: 3,
         }}
       >

@@ -38,7 +38,7 @@ export function NameEntry({ mode, initialName = "", initialCode = "", error, bus
             background: "transparent",
             color: T.mutedLight,
             fontFamily: T.sans,
-            fontSize: 13,
+            fontSize: T.type.sm,
             cursor: "pointer",
           }}
         >
@@ -73,7 +73,7 @@ export function NameEntry({ mode, initialName = "", initialCode = "", error, bus
           </p>
         )}
         {error && (
-          <p role="alert" style={{ fontFamily: T.sans, fontSize: 13, color: T.red, margin: 0 }}>
+          <p role="alert" style={{ fontFamily: T.sans, fontSize: T.type.sm, color: T.red, margin: 0 }}>
             {error}
           </p>
         )}

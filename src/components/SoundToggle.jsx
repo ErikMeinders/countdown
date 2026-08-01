@@ -1,4 +1,5 @@
 import { useTheme } from "../theme-context.jsx";
+import { iconBtn } from "../styles.js";
 
 // Drawn rather than an emoji: 🔊/🔇 render at a different size, weight and
 // colour on every platform, and on iOS they arrive in full colour, which is
@@ -12,15 +13,7 @@ export function SoundToggle({ muted, onToggle }) {
       onClick={onToggle}
       aria-label={muted ? "Unmute" : "Mute"}
       aria-pressed={muted}
-      style={{
-        position: "absolute", top: 4, right: 0,
-        width: 36, height: 36, borderRadius: T.r.md,
-        border: `1px solid ${T.panelBorder}`,
-        background: "transparent",
-        cursor: "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        padding: 0,
-      }}
+      style={{ ...iconBtn(T), position: "absolute", top: 4, right: 0 }}
     >
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path

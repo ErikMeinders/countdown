@@ -33,8 +33,8 @@ const accentFill = (T) => ({
 });
 
 export const labelStyle = (T) => ({
-  fontSize: 10,
-  letterSpacing: 2.5,
+  fontSize: T.type.xs,
+  letterSpacing: T.track.label,
   color: T.muted,
   fontFamily: T.mono,
   textTransform: "uppercase",
@@ -49,11 +49,16 @@ export const numBadge = (T, isCalc) => ({
   background: isCalc ? T.orangeDim : T.cyanDim,
   color: isCalc ? T.orange : T.cyan,
   fontWeight: 700,
-  fontSize: 14,
+  fontSize: T.type.md,
   fontFamily: T.mono,
 });
 
 // Shared skeleton for the text buttons, so a row of them lines up.
+//
+// Every action button carries the same type: one size, one weight, uppercase,
+// one tracking. What separates them is the fill, not the lettering — a row
+// used to pair an uppercase 15/700 primary with a sentence-case 14/600
+// secondary, which read as two components that happened to be adjacent.
 const btnBase = (T) => ({
   height: 44,
   padding: "0 20px",
@@ -63,8 +68,10 @@ const btnBase = (T) => ({
   justifyContent: "center",
   gap: 8,
   fontFamily: T.sans,
-  fontSize: 14,
-  fontWeight: 600,
+  fontSize: T.type.md,
+  fontWeight: 700,
+  letterSpacing: T.track.ui,
+  textTransform: "uppercase",
   cursor: "pointer",
   transition: "all 0.15s",
   boxSizing: "border-box",
@@ -76,10 +83,6 @@ export const primaryBtn = (T) => ({
   padding: "0 28px",
   border: "none",
   color: T.onAccent,
-  fontSize: 15,
-  fontWeight: 700,
-  letterSpacing: 1.5,
-  textTransform: "uppercase",
   ...accentFill(T),            // the one lit element per screen
 });
 
@@ -105,8 +108,28 @@ export const filledRowBtn = (T) => ({
   ...btnBase(T),
   border: "none",
   color: T.onAccent,
-  fontWeight: 700,
   ...accentFill(T),
+});
+
+// The icon-only controls — theme, sound, leave. They were three hand-rolled
+// copies of the same 36px box, and because none of them set a font, they
+// inherited the browser default (Arial 13.3px) rather than anything in the
+// palette. Harmless while they hold an SVG; a trap the moment one holds text.
+export const iconBtn = (T) => ({
+  width: T.control,
+  height: T.control,
+  borderRadius: T.r.md,
+  border: `1px solid ${T.panelBorder}`,
+  background: "transparent",
+  color: T.mutedLight,
+  fontFamily: T.sans,
+  fontSize: T.type.sm,
+  cursor: "pointer",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: 0,
+  boxSizing: "border-box",
 });
 
 export const segmentedBox = (T) => ({
@@ -125,7 +148,7 @@ export const segmentedItem = (T, on) => ({
   background: on ? T.cyanDim : "transparent",
   color: on ? T.cyan : T.muted,
   fontFamily: T.sans,
-  fontSize: 13,
+  fontSize: T.type.sm,
   fontWeight: on ? 700 : 500,
   cursor: "pointer",
   transition: "all 0.18s",

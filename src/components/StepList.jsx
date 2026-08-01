@@ -28,7 +28,7 @@ export function StepList({ steps, label, accent }) {
         );
       })}
       {steps.length === 0 && (
-        <div style={{ fontFamily: T.mono, fontSize: 13, color: T.muted }}>
+        <div style={{ fontFamily: T.mono, fontSize: T.type.sm, color: T.muted }}>
           No operations needed — a source number is closest.
         </div>
       )}

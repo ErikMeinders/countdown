@@ -1,4 +1,5 @@
 import { useTheme, useThemeControls } from "../theme-context.jsx";
+import { iconBtn } from "../styles.js";
 
 // Same drawn-SVG treatment as the sound toggle, mirrored to the top-left.
 // One tap cycles auto → light → dark: a sun for light, a moon for dark, and a
@@ -15,15 +16,7 @@ export function ThemeToggle() {
     <button
       onClick={() => setMode(NEXT[mode])}
       aria-label={`${LABEL[mode]} (tap to change)`}
-      style={{
-        position: "absolute", top: 4, left: 0,
-        width: 36, height: 36, borderRadius: T.r.md,
-        border: `1px solid ${T.panelBorder}`,
-        background: "transparent",
-        cursor: "pointer",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        padding: 0,
-      }}
+      style={{ ...iconBtn(T), position: "absolute", top: 4, left: 0 }}
     >
       <svg width="17" height="17" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         {mode === "light" && (
