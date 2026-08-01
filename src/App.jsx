@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useTheme } from "./theme-context.jsx";
-import { filledRowBtn, primaryBtn, secondaryBtn, tertiaryBtn } from "./styles.js";
+import { filledRowBtn, labelStyle, primaryBtn, secondaryBtn, tertiaryBtn } from "./styles.js";
 import {
   PHASES, PHASE_ORDER, REDUCED, REEL_START_MS, SWAP_MS, TILE_COUNT, TILE_DEAL_MS,
 } from "./constants.js";
@@ -22,6 +22,7 @@ import { ResultCarousel } from "./components/ResultCarousel.jsx";
 import { SoundToggle } from "./components/SoundToggle.jsx";
 import { ThemeToggle } from "./components/ThemeToggle.jsx";
 import { PersonIcon } from "./components/mp/PersonIcon.jsx";
+import { Wordmark } from "./components/Wordmark.jsx";
 
 // Rounds: a single-player session is this many scored rounds; a together match
 // is best-of this many.
@@ -34,11 +35,8 @@ function Setting({ label, children }) {
   const T = useTheme();
   return (
     <div>
-      <div style={{
-        fontSize: 10, letterSpacing: 2, textTransform: "uppercase",
-        color: T.muted, fontFamily: T.mono, marginBottom: 8, textAlign: "center",
-      }}>{label}</div>
-      <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>{children}</div>
+      <div style={{ ...labelStyle(T), textAlign: "center" }}>{label}</div>
+      <div style={{ display: "flex", gap: T.gap.sm, justifyContent: "center" }}>{children}</div>
     </div>
   );
 }
@@ -55,7 +53,7 @@ function Pill({ on, onClick, children }) {
         border: `1.5px solid ${on ? T.cyan : T.hair}`,
         background: on ? T.cyanDim : "transparent",
         color: on ? T.cyan : T.mutedLight,
-        fontFamily: T.sans, fontSize: 15, fontWeight: on ? 700 : 500,
+        fontFamily: T.sans, fontSize: T.type.md, fontWeight: on ? 700 : 500,
         cursor: "pointer", transition: "all 0.15s",
       }}
     >{children}</button>
@@ -422,10 +420,7 @@ export default function CountdownGame({ onTogether, multiplayerAvailable = false
         height: 44, marginBottom: 16,
         display: "flex", alignItems: "center", justifyContent: "center",
       }}>
-        <h1 style={{
-          fontFamily: T.sans, fontSize: 26, fontWeight: 700, letterSpacing: 7, margin: 0,
-          color: T.text, opacity: 0.92,
-        }}>COUNTDOWN</h1>
+        <Wordmark size="lg" as="h1" />
         <ThemeToggle />
         <SoundToggle
           muted={muted}
@@ -433,10 +428,17 @@ export default function CountdownGame({ onTogether, multiplayerAvailable = false
         />
       </div>
 
-      {/* Animated phase container */}
+      {/* Animated phase container.
+          The auto margins centre it in whatever height is left below the
+          header. On the setup and result screens — which are short — that
+          replaces a third of a phone screen of dead space under the content
+          with even air above and below. When the content is taller than the
+          space (the play screen), auto margins collapse to zero, so nothing
+          is ever pushed off the top. */}
       <div
         style={{
           width: "100%", maxWidth: 420,
+          marginTop: "auto", marginBottom: "auto",
           display: "flex", flexDirection: "column", alignItems: "center",
           animation: SWAP_MS
             ? `phase${anim === "out" ? "Exit" : "Enter"}${dir === "fwd" ? "Fwd" : "Back"} ${SWAP_MS}ms cubic-bezier(.4,0,.2,1) both`
@@ -478,7 +480,7 @@ export default function CountdownGame({ onTogether, multiplayerAvailable = false
           <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
             <button
               onClick={() => startSession(timeChoice)}
-              style={{ ...primaryBtn(T), flex: 1, gap: 8, letterSpacing: 1 }}
+              style={{ ...primaryBtn(T), flex: 1, gap: 8 }}
             >
               <PersonIcon variant="single" size={19} color={T.onAccent} />
               Single
@@ -508,7 +510,7 @@ export default function CountdownGame({ onTogether, multiplayerAvailable = false
             onClick={() => setShowHelp(true)}
             style={{
               alignSelf: "center", background: "none", border: "none",
-              color: T.muted, fontFamily: T.sans, fontSize: 13, cursor: "pointer",
+              color: T.muted, fontFamily: T.sans, fontSize: T.type.sm, cursor: "pointer",
               textDecoration: "underline", textUnderlineOffset: 3, marginTop: 2,
             }}
           >
@@ -677,7 +679,7 @@ export default function CountdownGame({ onTogether, multiplayerAvailable = false
             color: perfect ? T.gold : score > 0 ? T.violet : T.red,
           }}>
             {perfect ? "Spot on." : score === 7 ? "Within five." : score === 5 ? "Within ten." : "Nothing in range."}
-            <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 13, fontWeight: 500 }}>
+            <span style={{ color: T.muted, fontFamily: T.mono, fontSize: T.type.sm, fontWeight: 500 }}>
               {"  ·  "}+{score} pts
             </span>
           </div>
@@ -708,7 +710,7 @@ export default function CountdownGame({ onTogether, multiplayerAvailable = false
 
       <div style={{
         marginTop: "auto", paddingTop: 28,
-        fontSize: 10, color: T.dim, fontFamily: T.mono, letterSpacing: 2.5,
+        fontSize: T.type.xs, color: T.dim, fontFamily: T.mono, letterSpacing: T.track.label,
       }}>
         PICK · CALCULATE · COUNTDOWN
       </div>

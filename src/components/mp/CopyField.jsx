@@ -46,7 +46,7 @@ export function CopyField({ label, value, mono = true }) {
             border: `1px solid ${T.panelBorder}`,
             background: T.surfaceLo,
             fontFamily: mono ? T.mono : T.sans,
-            fontSize: 13,
+            fontSize: T.type.sm,
             color: T.text,
             overflow: "hidden",
             textOverflow: "ellipsis",
@@ -67,7 +67,7 @@ export function CopyField({ label, value, mono = true }) {
             background: copied ? T.cyanDim : "transparent",
             color: copied ? T.cyan : T.text,
             fontFamily: T.sans,
-            fontSize: 13,
+            fontSize: T.type.sm,
             fontWeight: 600,
             cursor: "pointer",
           }}

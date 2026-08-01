@@ -33,7 +33,7 @@ export function HelpOverlay({ onClose }) {
   const HelpSection = ({ title, children }) => (
     <div style={{ marginBottom: 20 }}>
       <div style={{ ...labelStyle(T), color: T.cyan, marginBottom: 7 }}>{title}</div>
-      <div style={{ fontSize: 13.5, lineHeight: 1.65, color: T.textDim }}>
+      <div style={{ fontSize: T.type.md, lineHeight: 1.65, color: T.textDim }}>
         {children}
       </div>
     </div>
@@ -78,7 +78,7 @@ export function HelpOverlay({ onClose }) {
               letterSpacing: 2, color: T.text,
             }}>HOW TO PLAY</div>
             <div style={{
-              fontFamily: T.mono, fontSize: 10, letterSpacing: 2.5,
+              fontFamily: T.mono, fontSize: T.type.xs, letterSpacing: T.track.label,
               color: T.muted, marginTop: 2,
             }}>THE NUMBERS ROUND</div>
           </div>

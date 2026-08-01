@@ -189,7 +189,7 @@ export function MultiplayerApp({ initialJoinCode, createParams, onExit, createTr
               border: `1px solid ${T.red}55`,
               boxShadow: "0 6px 24px rgba(0,0,0,0.4)",
               fontFamily: T.sans,
-              fontSize: 13,
+              fontSize: T.type.sm,
               color: T.text,
             }}
           >
@@ -252,7 +252,7 @@ function ErrorToast({ message, onDismiss }) {
           background: T.panel,
           border: `1px solid ${T.red}66`,
           fontFamily: T.sans,
-          fontSize: 13,
+          fontSize: T.type.sm,
           color: T.text,
         }}
       >

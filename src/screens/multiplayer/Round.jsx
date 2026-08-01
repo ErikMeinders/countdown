@@ -185,7 +185,7 @@ export function Round({ room, match, playerId, round, submission, connectionStat
       </div>
 
       {/* Live local preview — clearly provisional until the backend confirms */}
-      <div style={{ textAlign: "center", fontFamily: T.mono, fontSize: 13, color: T.mutedLight, minHeight: 20 }}>
+      <div style={{ textAlign: "center", fontFamily: T.mono, fontSize: T.type.sm, color: T.mutedLight, minHeight: 20 }}>
         {best ? (
           <>
             Best so far <span style={{ color: best.exact ? T.gold : T.cyan, fontWeight: 700 }}>{best.value}</span>{" "}
@@ -205,7 +205,7 @@ export function Round({ room, match, playerId, round, submission, connectionStat
         style={{
           textAlign: "center",
           fontFamily: T.sans,
-          fontSize: 13,
+          fontSize: T.type.sm,
           fontWeight: 600,
           color:
             submissionState === SubmissionState.REJECTED
