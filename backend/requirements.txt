@@ -1,0 +1,5 @@
+# Production runtime dependencies for the Lambda.
+#
+# boto3 and botocore are provided by the AWS Lambda python3.13 runtime, so there
+# is nothing to bundle. If you add a dependency, list it here and `make build`
+# will vendor it into the deployment ZIP.

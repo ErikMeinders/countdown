@@ -1,14 +1,14 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 
-import App from "./App.jsx";
+import Shell from "./Shell.jsx";
 import { ThemeProvider } from "./theme-context.jsx";
 import "./styles/animations.css";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
     <ThemeProvider>
-      <App />
+      <Shell />
     </ThemeProvider>
   </StrictMode>
 );

@@ -29,7 +29,12 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm test
+      # The multiplayer backend URL is a build-time variable (set as a repo
+      # Actions variable, not committed). Without it the site still builds —
+      # "Play together" is simply disabled.
       - run: npm run build
+        env:
+          VITE_COUNTDOWN_WEBSOCKET_URL: ${{ vars.VITE_COUNTDOWN_WEBSOCKET_URL }}
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

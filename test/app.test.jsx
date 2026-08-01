@@ -16,14 +16,15 @@ describe("the game", () => {
   it("opens on the pick screen", () => {
     render(<App />);
     expect(screen.getByText("COUNTDOWN")).toBeDefined();
-    expect(screen.getByText("How many large numbers?")).toBeDefined();
-    expect(screen.getByText("30")).toBeDefined();
-    expect(screen.getByText("60")).toBeDefined();
+    expect(screen.getByText("Large numbers")).toBeDefined();
+    expect(screen.getByText("Round length")).toBeDefined();
+    expect(screen.getByText("45s")).toBeDefined();
+    expect(screen.getByText("Single")).toBeDefined();
   });
 
   it("deals six tiles and a target when a round starts", async () => {
     render(<App />);
-    fireEvent.click(screen.getByText("30"));
+    fireEvent.click(screen.getByText("Single"));
 
     // The clock is held back until the reels settle, so the prompt is what
     // tells us the play screen is live.
@@ -38,7 +39,7 @@ describe("the game", () => {
   // off afterwards with nothing to attach to.
   it("staggers the tile pop-in by the same interval as the deal clicks", async () => {
     const { container } = render(<App />);
-    fireEvent.click(screen.getByText("30"));
+    fireEvent.click(screen.getByText("Single"));
     await waitFor(() => screen.getByText(/Tap a number,/));
 
     // jsdom doesn't expand the `animation` shorthand, so read the attribute.
@@ -64,12 +65,12 @@ describe("the game", () => {
 
   it("scores a round that is submitted untouched", async () => {
     render(<App />);
-    fireEvent.click(screen.getByText("30"));
+    fireEvent.click(screen.getByText("Single"));
     await waitFor(() => screen.getByText("Submit"));
 
     fireEvent.click(screen.getByText("Submit"));
-    expect(await screen.findByText("New Round")).toBeDefined();
-    expect(screen.getByText("Given numbers", { exact: false })).toBeDefined();
-    expect(screen.getByText(/point/)).toBeDefined();
+    expect(await screen.findByText("Next round")).toBeDefined();
+    expect(screen.getByText("Target")).toBeDefined(); // shared puzzle panel
+    expect(screen.getByText(/pts total/)).toBeDefined(); // session points tracker
   });
 });

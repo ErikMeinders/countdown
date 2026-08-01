@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { DISPLAY } from "./theme.js";
 import { useTheme } from "./theme-context.jsx";
-import {
-  filledRowBtn, labelStyle, panelStyle, primaryBtn,
-  secondaryBtn, segmentedBox, segmentedItem, tertiaryBtn,
-} from "./styles.js";
+import { filledRowBtn, primaryBtn, secondaryBtn, tertiaryBtn } from "./styles.js";
 import {
   PHASES, PHASE_ORDER, REDUCED, REEL_START_MS, SWAP_MS, TILE_COUNT, TILE_DEAL_MS,
 } from "./constants.js";
@@ -17,18 +13,60 @@ import { solve } from "./game/solver.js";
 import { traceTiles } from "./game/trace.js";
 import { Sound } from "./sound.js";
 import { HelpOverlay } from "./components/HelpOverlay.jsx";
-import { Legend } from "./components/Legend.jsx";
 import { NumberTile } from "./components/NumberTile.jsx";
 import { OpButton } from "./components/OpButton.jsx";
-import { StepColumn } from "./components/StepColumn.jsx";
 import { StepList } from "./components/StepList.jsx";
 import { TargetPanel } from "./components/TargetPanel.jsx";
-import { StaticNumber } from "./components/SlotNumber.jsx";
+import { PuzzlePanel } from "./components/PuzzlePanel.jsx";
+import { ResultCarousel } from "./components/ResultCarousel.jsx";
 import { SoundToggle } from "./components/SoundToggle.jsx";
 import { ThemeToggle } from "./components/ThemeToggle.jsx";
+import { PersonIcon } from "./components/mp/PersonIcon.jsx";
+
+// Rounds: a single-player session is this many scored rounds; a together match
+// is best-of this many.
+const ROUND_CHOICES = [3, 5, 7];
+
+// One control language for the whole setup screen: a labelled row of pills.
+// Everything — large numbers, target, length, rounds — is the same shape and
+// type size, so the screen reads as one system rather than a stack of panels.
+function Setting({ label, children }) {
+  const T = useTheme();
+  return (
+    <div>
+      <div style={{
+        fontSize: 10, letterSpacing: 2, textTransform: "uppercase",
+        color: T.muted, fontFamily: T.mono, marginBottom: 8, textAlign: "center",
+      }}>{label}</div>
+      <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>{children}</div>
+    </div>
+  );
+}
+
+function Pill({ on, onClick, children }) {
+  const T = useTheme();
+  return (
+    <button
+      onClick={onClick}
+      aria-pressed={on}
+      style={{
+        flex: 1, height: 46, padding: "0 8px",
+        borderRadius: T.r.md,
+        border: `1.5px solid ${on ? T.cyan : T.hair}`,
+        background: on ? T.cyanDim : "transparent",
+        color: on ? T.cyan : T.mutedLight,
+        fontFamily: T.sans, fontSize: 15, fontWeight: on ? 700 : 500,
+        cursor: "pointer", transition: "all 0.15s",
+      }}
+    >{children}</button>
+  );
+}
 
 // ── Main Game ──────────────────────────────────────────────────
-export default function CountdownGame() {
+// The single-player game, and the shared parameters screen. Choosing "Together"
+// hands the chosen time and rounds up to the shell, which switches to the
+// multiplayer flow; nothing here opens a socket.
+export default function CountdownGame({ onTogether, multiplayerAvailable = false, multiWarning = "" } = {}) {
   const T = useTheme();
   const [phase, setPhase] = useState(PHASES.PICK);
   const [displayPhase, setDisplayPhase] = useState(PHASES.PICK);
@@ -43,11 +81,16 @@ export default function CountdownGame() {
   const [muted, setMuted] = useState(false);
 
   const [seconds, setSeconds] = useState(30);
-  const [roundLength, setRoundLength] = useState(30);
+  const [roundLength, setRoundLength] = useState(45);
+  const [timeChoice, setTimeChoice] = useState(45); // selected on the pick screen
+  const [rounds, setRounds] = useState(5); // session length (single) / best-of (together)
+  const [roundNo, setRoundNo] = useState(1); // current round within a single-player session
+  const [totalPts, setTotalPts] = useState(0); // running points across the session
   const [solvableOnly, setSolvableOnly] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
   const [running, setRunning] = useState(false);
   const timerRef = useRef(null);
+  const scoredRound = useRef(0); // guards the once-per-round points tally
 
   const [usedIndices, setUsedIndices] = useState(new Set());
   const [steps, setSteps] = useState([]);
@@ -306,6 +349,23 @@ export default function CountdownGame() {
     setSolving(false);
   }
 
+  // A single-player session: play `rounds` rounds, keeping a running points
+  // total (10 exact, 7 within five, 5 within ten, else 0).
+  async function startSession(length) {
+    setRoundNo(1);
+    setTotalPts(0);
+    scoredRound.current = 0;
+    await startGame(length);
+  }
+  function nextRound() {
+    setRoundNo((r) => r + 1);
+    startGame(roundLength);
+  }
+  function playAgain() {
+    startSession(roundLength);
+  }
+  const sessionComplete = roundNo >= rounds;
+
   const score = (() => {
     if (bestResult === null) return 0;
     const diff = Math.abs(bestResult - target);
@@ -316,6 +376,37 @@ export default function CountdownGame() {
   })();
   const perfect = score === 10;
   const liveSteps = steps.filter(Boolean);
+
+  // The two solution cards for the result carousel: yours, then the computer's.
+  const solverValue = solution
+    ? solution.steps.length
+      ? solution.steps[solution.steps.length - 1].result
+      : solution.exact
+        ? target
+        : numbers.reduce((b, n) => (Math.abs(n - target) < Math.abs(b - target) ? n : b), numbers[0] ?? 0)
+    : null;
+  const resultCards = [
+    {
+      key: "you", kind: "human", name: "You", submitted: bestResult !== null,
+      steps: liveSteps, value: bestResult,
+      distance: bestResult !== null ? Math.abs(bestResult - target) : null,
+      exact: perfect, operations: liveSteps.length, isWinner: false,
+    },
+    {
+      key: "computer", kind: "computer", name: "Computer", submitted: !!solution,
+      steps: solution ? solution.steps : [], value: solverValue,
+      distance: solution ? solution.diff : null, exact: solution ? solution.exact : false,
+      operations: solution ? solution.steps.length : 0, isWinner: false,
+    },
+  ];
+
+  // Tally this round's points into the session total, exactly once per round.
+  useEffect(() => {
+    if (phase === PHASES.RESULT && scoredRound.current !== roundId) {
+      scoredRound.current = roundId;
+      setTotalPts((t) => t + score);
+    }
+  }, [phase, roundId, score]);
 
   return (
     <div style={{
@@ -357,98 +448,70 @@ export default function CountdownGame() {
       {/* ── PICK ────────────────────────────────────────────── */}
       {displayPhase === PHASES.PICK && (
         <div style={{
-          display: "flex", flexDirection: "column", alignItems: "center",
-          gap: T.gap.xl, maxWidth: 400, width: "100%", marginTop: 24,
+          display: "flex", flexDirection: "column",
+          gap: 22, width: "100%", maxWidth: 340, marginTop: 18,
         }}>
-          <div style={panelStyle(T)}>
-            <div style={{ ...labelStyle(T), textAlign: "center" }}>How many large numbers?</div>
-            <div style={{ display: "flex", justifyContent: "center", gap: T.gap.sm, marginBottom: 14 }}>
-              {[0, 1, 2, 3, 4].map(n => (
-                <button key={n} onClick={() => setNumLarge(n)} style={{
-                  width: 48, height: 48, borderRadius: T.r.md,
-                  border: `1.5px solid ${n === numLarge ? T.cyan : T.hair}`,
-                  background: n === numLarge ? T.cyanDim : "transparent",
-                  color: n === numLarge ? T.cyan : T.mutedLight,
-                  fontSize: 19, fontWeight: 700, fontFamily: T.mono,
-                  cursor: "pointer", transition: "all 0.15s",
-                }}>{n}</button>
-              ))}
-            </div>
-            <div style={{ textAlign: "center", fontSize: 11.5, color: T.muted, fontFamily: T.mono }}>
-              {numLarge} large · {6 - numLarge} small (1–10)
-            </div>
-
-            <div style={{
-              marginTop: 18, paddingTop: 16,
-              borderTop: `1px solid ${T.panelBorder}`,
-            }}>
-              <div style={{ ...labelStyle(T), textAlign: "center" }}>Target</div>
-              <div style={segmentedBox(T)}>
-                {[
-                  { v: false, label: "Authentic", hint: "may be unreachable" },
-                  { v: true,  label: "Solvable",  hint: "always has an answer" },
-                ].map(({ v, label, hint }) => (
-                  <button
-                    key={label}
-                    onClick={() => setSolvableOnly(v)}
-                    title={hint}
-                    style={segmentedItem(T, solvableOnly === v)}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-              <div style={{
-                textAlign: "center", marginTop: 8,
-                fontSize: 10.5, color: T.dim, fontFamily: T.mono,
-              }}>
-                {solvableOnly
-                  ? "built from your tiles — always reachable"
-                  : "pure random, like the show — may be impossible"}
-              </div>
-            </div>
-          </div>
-
-          <div style={{ display: "flex", gap: T.gap.md, width: "100%" }}>
-            {ROUND_LENGTHS.map((len) => (
-              <button
-                key={len}
-                onClick={() => startGame(len)}
-                style={{
-                  flex: 1, height: 64,
-                  borderRadius: T.r.lg,
-                  border: `1px solid ${T.hairStrong}`,
-                  background: T.surfaceHi,
-                  boxShadow: `inset 0 1px 0 ${T.hair}`,   // lit top edge, like a key
-                  cursor: "pointer",
-                  fontFamily: T.sans,
-                  display: "flex", flexDirection: "column",
-                  alignItems: "center", justifyContent: "center", gap: 1,
-                  transition: "all 0.15s",
-                }}
-              >
-                <span style={{ fontSize: 24, fontWeight: 900, lineHeight: 1, fontFamily: T.mono, color: T.text }}>
-                  {len}
-                </span>
-                <span style={{
-                  fontSize: 10, fontWeight: 700, letterSpacing: 2.5,
-                  textTransform: "uppercase", color: T.muted,
-                }}>
-                  seconds
-                </span>
-              </button>
+          <Setting label="Large numbers">
+            {[0, 1, 2, 3, 4].map((n) => (
+              <Pill key={n} on={numLarge === n} onClick={() => setNumLarge(n)}>{n}</Pill>
             ))}
+          </Setting>
+
+          <Setting label="Target">
+            <Pill on={!solvableOnly} onClick={() => setSolvableOnly(false)}>Authentic</Pill>
+            <Pill on={solvableOnly} onClick={() => setSolvableOnly(true)}>Solvable</Pill>
+          </Setting>
+
+          <Setting label="Round length">
+            {ROUND_LENGTHS.map((len) => (
+              <Pill key={len} on={timeChoice === len} onClick={() => setTimeChoice(len)}>{len}s</Pill>
+            ))}
+          </Setting>
+
+          <Setting label="Rounds">
+            {ROUND_CHOICES.map((n) => (
+              <Pill key={n} on={rounds === n} onClick={() => setRounds(n)}>{n}</Pill>
+            ))}
+          </Setting>
+
+          {/* Two ways to play: solo on-device, or a room over the network */}
+          <div style={{ display: "flex", gap: 10, marginTop: 6 }}>
+            <button
+              onClick={() => startSession(timeChoice)}
+              style={{ ...primaryBtn(T), flex: 1, gap: 8, letterSpacing: 1 }}
+            >
+              <PersonIcon variant="single" size={19} color={T.onAccent} />
+              Single
+            </button>
+            <button
+              onClick={multiplayerAvailable ? () => onTogether?.({ bestOf: rounds, roundSeconds: timeChoice }) : undefined}
+              disabled={!multiplayerAvailable}
+              aria-disabled={!multiplayerAvailable}
+              style={{
+                ...secondaryBtn(T), flex: 1, height: 52, gap: 8,
+                opacity: multiplayerAvailable ? 1 : 0.5,
+                cursor: multiplayerAvailable ? "pointer" : "not-allowed",
+              }}
+            >
+              <PersonIcon variant="double" size={21} color={T.text} />
+              Together
+            </button>
           </div>
+
+          {(!multiplayerAvailable || multiWarning) && (
+            <p style={{ fontFamily: T.mono, fontSize: 11, lineHeight: 1.6, color: multiWarning ? T.red : T.dim, textAlign: "center", margin: "-8px 4px 0" }}>
+              {multiWarning || "Multiplayer isn’t configured — local play only."}
+            </p>
+          )}
+
           <button
             onClick={() => setShowHelp(true)}
-            style={{ ...secondaryBtn(T), marginTop: -4 }}
+            style={{
+              alignSelf: "center", background: "none", border: "none",
+              color: T.muted, fontFamily: T.sans, fontSize: 13, cursor: "pointer",
+              textDecoration: "underline", textUnderlineOffset: 3, marginTop: 2,
+            }}
           >
-            <span style={{
-              display: "inline-flex", alignItems: "center", justifyContent: "center",
-              width: 17, height: 17, borderRadius: "50%",
-              border: `1px solid ${T.mutedLight}`,
-              fontSize: 11, fontWeight: 700, fontFamily: T.sans,
-            }}>?</span>
             How to play
           </button>
         </div>
@@ -460,6 +523,9 @@ export default function CountdownGame() {
           display: "flex", flexDirection: "column", alignItems: "center",
           gap: T.gap.lg, maxWidth: 420, width: "100%",
         }}>
+          <div style={{ fontFamily: T.mono, fontSize: 12, color: T.muted, letterSpacing: 1 }}>
+            Round {roundNo} of {rounds} · {totalPts} pts
+          </div>
           <TargetPanel
             target={target}
             seconds={seconds}
@@ -603,90 +669,36 @@ export default function CountdownGame() {
           display: "flex", flexDirection: "column", alignItems: "center",
           gap: T.gap.lg, maxWidth: 420, width: "100%",
         }}>
+          <div style={{ fontFamily: T.mono, fontSize: 12, color: T.muted, letterSpacing: 1, textAlign: "center" }}>
+            Round {roundNo} of {rounds} · {totalPts} pts total
+          </div>
           <div style={{
-            ...panelStyle(T),
-            textAlign: "center",
-            border: `1px solid ${perfect ? `${T.gold}66` : T.panelBorder}`,
-            animation: perfect ? "shimmer 2.4s ease-in-out infinite" : "none",
+            fontFamily: T.sans, fontSize: 16, fontWeight: 700, letterSpacing: 0.5, textAlign: "center",
+            color: perfect ? T.gold : score > 0 ? T.violet : T.red,
           }}>
-            <div style={labelStyle(T)}>Target</div>
-            <StaticNumber value={target} color={perfect ? DISPLAY.gold : DISPLAY.cyan} fontSize={46} />
+            {perfect ? "Spot on." : score === 7 ? "Within five." : score === 5 ? "Within ten." : "Nothing in range."}
+            <span style={{ color: T.muted, fontFamily: T.mono, fontSize: 13, fontWeight: 500 }}>
+              {"  ·  "}+{score} pts
+            </span>
+          </div>
 
-            {bestResult !== null && (
-              <div style={{ marginTop: 10 }}>
-                <span style={{ fontFamily: T.mono, fontSize: 12.5, color: T.mutedLight }}>
-                  your answer{" "}
-                </span>
-                <span style={{
-                  fontFamily: T.mono, fontSize: 19, fontWeight: 700,
-                  color: perfect ? T.gold : score > 0 ? T.cyan : T.red,
-                }}>{bestResult}</span>
+          <PuzzlePanel target={target} numbers={numbers} perfect={perfect} />
+
+          <ResultCarousel cards={resultCards} target={target} resetKey={roundId} />
+
+          {sessionComplete ? (
+            <div style={{ display: "flex", flexDirection: "column", gap: 12, width: "100%", alignItems: "center" }}>
+              <div style={{ fontFamily: T.sans, fontSize: 16, fontWeight: 700, color: T.text }}>
+                Session complete · {totalPts} / {rounds * 10} pts
               </div>
-            )}
-
-            <div style={{
-              marginTop: 12, fontFamily: T.sans, fontSize: 15, fontWeight: 700,
-              letterSpacing: 0.5,
-              color: perfect ? T.gold : score > 0 ? T.violet : T.red,
-            }}>
-              {perfect ? "Spot on." : score === 7 ? "Within five." : score === 5 ? "Within ten." : "Nothing in range."}
+              <div style={{ display: "flex", gap: 10, width: "100%" }}>
+                <button onClick={playAgain} style={{ ...primaryBtn(T), flex: 1 }}>Play again</button>
+                <button onClick={newGame} style={{ ...secondaryBtn(T), flex: 1, height: 52 }}>Settings</button>
+              </div>
             </div>
-            <div style={{ fontSize: 11.5, color: T.muted, fontFamily: T.mono, marginTop: 4 }}>
-              {score} point{score !== 1 ? "s" : ""}
-            </div>
-          </div>
-
-          {/* Recap: given numbers on top, solutions side by side below */}
-          <div style={panelStyle(T)}>
-            <div style={{ ...labelStyle(T), textAlign: "center" }}>
-              Given numbers
-              {numbers.length > 0 && (
-                <span style={{ color: T.dim, letterSpacing: 1 }}>
-                  {"  ·  "}{answerTiles.size}/{numbers.length} used
-                </span>
-              )}
-            </div>
-            <div style={{
-              display: "flex", gap: T.gap.sm, flexWrap: "wrap", justifyContent: "center",
-              paddingBottom: 16,
-              borderBottom: `1px solid ${T.panelBorder}`,
-            }}>
-              {numbers.map((n, i) => (
-                <NumberTile key={i} value={n} compact faded={!answerTiles.has(i)} />
-              ))}
-            </div>
-
-            <div style={{ display: "flex", alignItems: "stretch", gap: 14, paddingTop: 16 }}>
-              <StepColumn
-                steps={liveSteps}
-                label="Yours"
-                align="left"
-                accent={perfect ? T.gold : T.mutedLight}
-                target={target}
-                empty="no steps"
-              />
-
-              <div style={{ width: 1, background: T.panelBorder, flexShrink: 0 }} />
-
-              <StepColumn
-                steps={solution ? solution.steps : []}
-                label={
-                  solving ? "Solving…"
-                    : !solution ? "Best"
-                    : solution.exact ? "Best — exact"
-                    : `Best — ${solution.diff} off`
-                }
-                align="right"
-                accent={T.violet}
-                target={target}
-                empty={solving ? "…" : "a given number was closest"}
-              />
-            </div>
-
-            <Legend />
-          </div>
-
-          <button onClick={newGame} style={primaryBtn(T)}>New Round</button>
+          ) : (
+            <button onClick={nextRound} style={primaryBtn(T)}>Next round</button>
+          )}
         </div>
       )}
 

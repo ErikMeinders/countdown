@@ -17,7 +17,7 @@ describe("round lengths", () => {
     expect(ROUND_LENGTHS).toEqual([30, 45, 60]);
     render(<App />);
     for (const len of [30, 45, 60]) {
-      expect(screen.getByText(String(len))).toBeDefined();
+      expect(screen.getByText(`${len}s`)).toBeDefined();
     }
   });
 });
