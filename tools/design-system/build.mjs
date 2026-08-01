@@ -18,6 +18,17 @@ import { fileURLToPath } from "node:url";
 
 import { DISPLAY, PALETTES, urgencyColor } from "../../src/theme.js";
 import {
+  REEL_BASE_MS, REEL_CELL, REEL_CELLS, REEL_EASE, REEL_LOOPS,
+  REEL_STAGGER_MS, REEL_STEP_MS, REEL_TRAVEL, REEL_WIDTH,
+  reelDuration, reelLanding,
+} from "../../src/reels.js";
+import {
+  reelFaceStyle,
+  reelGlow,
+  reelLipStyle,
+  reelWellStyle,
+} from "../../src/components/reelStyles.js";
+import {
   filledRowBtn,
   iconBtn,
   labelStyle,
@@ -319,6 +330,42 @@ cards["panel-icons.html"] = bothThemes({
     <p class="note" style="color:${T.muted}">
       Panels carry an inset hairline along the top edge, so a flat scheme still reads as lit.
     </p>`,
+});
+
+// The reels are the one surface that does not theme, so this card is built the
+// other way round from the rest: the same display on both palettes, to show
+// that it does *not* change. If a future edit makes it follow the theme, the
+// two halves of this card stop matching and it's obvious at a glance.
+cards["reels.html"] = bothThemes({
+  group: "Foundations",
+  name: "Reels",
+  subtitle: "The lit display — identical in both themes",
+  render: (T) => {
+    const face = (d, color, size = 50) =>
+      `<div style="${toCss({ ...reelFaceStyle, position: "relative", overflow: "hidden", height: REEL_CELL, width: REEL_WIDTH })}">
+         <div style="height:${REEL_CELL}px;line-height:${REEL_CELL}px;text-align:center;font-family:${DISPLAY.mono};font-size:${size}px;font-weight:700;color:${color};text-shadow:${reelGlow(color)}">${d}</div>
+         <div style="${toCss(reelLipStyle)}"></div>
+       </div>`;
+    const well = (digits, color) =>
+      `<div style="${toCss(reelWellStyle)}">${digits
+        .split("")
+        .map((d) => face(d, color))
+        .join("")}</div>`;
+
+    return `
+      <div style="margin-bottom:18px">${well("812", DISPLAY.text)}</div>
+      <div class="row" style="gap:8px">
+        ${["8", "1", "2"].map((d, i) => face(d, [DISPLAY.cyan, DISPLAY.amber, DISPLAY.ember][i], 34)).join("")}
+      </div>
+      <p class="note" style="color:${T.muted}">
+        cell ${REEL_CELL} × ${REEL_WIDTH} &nbsp;·&nbsp; ${REEL_LOOPS} loops = ${REEL_CELLS} cells past the window<br>
+        stagger ${REEL_STAGGER_MS}ms &nbsp;·&nbsp; ${reelDuration(0)}–${reelDuration(2)}ms
+        (${REEL_BASE_MS} + ${REEL_STEP_MS} per reel) &nbsp;·&nbsp; travel ${Math.round(REEL_TRAVEL * 100)}%<br>
+        ease cubic-bezier(${REEL_EASE.join(", ")}) &nbsp;·&nbsp; last reel lands at ${reelLanding(2).toFixed(2)}s<br>
+        Each cell boundary crossing the window is one click of the rattle — sound and
+        animation are derived from the same numbers, not kept in step by hand.
+      </p>`;
+  },
 });
 
 cards["wordmark.html"] = bothThemes({
