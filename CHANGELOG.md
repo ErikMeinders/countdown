@@ -4,6 +4,44 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning is
 [semantic](https://semver.org/).
 
+## [1.5.0] — 2026-08-01
+
+A design pass over both themes, done against the rendered app on a phone-sized
+viewport and measured rather than eyeballed.
+
+### Fixed
+
+- **Light-mode contrast where the accents are actually used.** They appear as
+  text on their own tint — the selected pill, the number badge, the active
+  segment — and the first light pass only checked them against the page
+  background. On the tint they were landing at 2.3:1 against the 4.5:1 that
+  normal text needs. Each accent is now the lightest value that clears it where
+  it is used: cyan on its tint 2.27 → 4.53, orange 2.54 → 4.51, and white on
+  the primary key 4.00 → 4.86 or better. The tints keep their hue, so the
+  surfaces stay as airy as before.
+- Light hairlines lifted from 0.16 to 0.26. Navy at 0.16 on near-white is a far
+  weaker edge than white at 0.14 on near-black, so a row of unselected pills
+  had all but disappeared into the background.
+
+### Changed
+
+- **A type scale.** Eight sizes had accumulated (10/12/13/13.5/14/15/17/26) and
+  six letter-spacings, each picked to look right where it stood. Five steps
+  now, with tracking as an em value so it holds at any size.
+- **One wordmark.** COUNTDOWN was written out twice — 26px with 7px tracking on
+  the setup screen, 15px with 6px on the multiplayer ones. Two sizes is right;
+  disproportionate tracking made it the same word rather than the same mark.
+- **One button treatment.** A single row paired an uppercase 15/700 primary
+  with a sentence-case 14/600 secondary. Single and Together now differ by fill
+  alone, which is what the hierarchy in `styles.js` always claimed.
+- **The screens fill the phone.** Setup and the room screens pinned everything
+  to the top and left the bottom third empty. The body now centres under a
+  pinned brand bar, using auto margins that collapse when the content is tall —
+  so the play screen is unchanged and nothing can be clipped off the top.
+- `iconBtn` in `styles.js`: theme, sound and leave were three copies of the
+  same 36px box, and because none of them set a font they inherited the browser
+  default (Arial 13.3px) rather than anything in the palette.
+
 ## [1.4.0] — 2026-08-01
 
 Multiplayer. Released as commit `e4e612d` on 2026-08-01, which reached the
