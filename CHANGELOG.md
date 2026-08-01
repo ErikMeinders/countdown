@@ -4,6 +4,39 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning is
 [semantic](https://semver.org/).
 
+## [1.6.0] — 2026-08-01
+
+### Added
+
+- **Reconnect.** A dropped socket no longer strands a player. The client
+  already retried with bounded backoff; what was missing was any way for the
+  server to recognise the returning player, so the retry reconnected a socket
+  that belonged to nobody. It now re-announces itself on a new `reconnect`
+  route the moment the socket opens — before anything queued during the
+  outage — and the backend rebinds the seat, retires the stale connection rows,
+  and replies with a whole-room snapshot: the room, the live round with the
+  server's own clock, that player's best answer so far, and any result they
+  were away for. Play resumes where it left off.
+
+  A snapshot rather than a replay of missed events: a client that was offline
+  for two rounds cannot be caught up by frames it never received, and the phase
+  it should resume in is derivable from the snapshot alone. The phase is worked
+  out on the client, where the rest of that mapping already lives.
+
+  Keyed on the player ID the client is given at create/join, not a token — the
+  browser deliberately stores no credential, and the ID is unguessable enough
+  for a room that expires within the hour.
+
+### Changed
+
+- The reconnect banner moved from the bottom of the screen to the top: pinned
+  to the bottom it landed on top of Cancel/Reset/Submit, half-covering the row
+  it was reporting on. Its second line said the room might not resume, which is
+  no longer true — it now says your place is kept.
+- `?mock=1` can drive the whole flow, including a drop: `mockDrop()` in the
+  console fakes one, and the mock answers `reconnect` with the same snapshot
+  shape as the backend, so the client's resume path is exercised there too.
+
 ## [1.5.0] — 2026-08-01
 
 A design pass over both themes, done against the rendered app on a phone-sized

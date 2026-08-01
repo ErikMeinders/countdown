@@ -24,10 +24,14 @@ const REQUEST_TIMEOUT_MS = 10000;
 const KEEPALIVE_MS = 4 * 60 * 1000; // under API Gateway's 10-minute idle cap
 
 export class WebSocketClient {
-  constructor(url, { onState, onMessage, socketFactory } = {}) {
+  constructor(url, { onState, onMessage, onOpen, socketFactory } = {}) {
     this._url = url;
     this._onState = onState || (() => {});
     this._onMessage = onMessage || (() => {});
+    // Called on every open, including the ones the backoff produces. This is
+    // the hook the resume hangs off: the socket coming back is the only
+    // moment the client knows to re-announce who it is.
+    this._onOpen = onOpen || (() => {});
     this._socketFactory = socketFactory || ((u) => new WebSocket(u));
 
     this._socket = null;
@@ -66,6 +70,11 @@ export class WebSocketClient {
     socket.onopen = () => {
       this._attempts = 0;
       this._setState(ConnectionState.CONNECTED);
+      // Before the queue: anything queued while the socket was down (a
+      // submitAnswer the player tapped mid-drop) needs the server to have
+      // rebound this connection to their seat first, or it arrives from an
+      // unknown connection and is rejected as NOT_A_MEMBER.
+      this._onOpen();
       this._flushQueue();
       this._startKeepalive();
     };

@@ -72,4 +72,79 @@ describe("multiplayer reducer", () => {
     expect(s.room).toBeNull();
     expect(s.displayName).toBe("Erik");
   });
+
+  // ── Reconnect ────────────────────────────────────────────────
+  // roomState is a whole-room snapshot; the phase it implies is worked out
+  // here, so these cases pin the derivation rather than the wire format.
+
+  const snapshot = (over = {}) => ({
+    playerId: "you",
+    match: { bestOf: 5 },
+    room,
+    serverTime: 1000,
+    round: null,
+    submission: null,
+    result: null,
+    ...over,
+  });
+
+  it("resumes into the lobby when nothing is in flight", () => {
+    const s = reducer(createInitialState("Erik"), srv("roomState", snapshot()));
+    expect(s.phase).toBe(Phase.LOBBY);
+    expect(s.playerId).toBe("you");
+    expect(s.room.code).toBe("AB7D");
+  });
+
+  it("resumes into a live round, keeping its own best answer", () => {
+    const s = reducer(
+      createInitialState(),
+      srv("roomState", snapshot({
+        round: { roundNumber: 2, target: 500, numbers: [1], status: "ACTIVE", startsAt: 0, endsAt: 9 },
+        submission: { expression: "75+50", value: 125 },
+      }))
+    );
+    expect(s.phase).toBe(Phase.PLAYING);
+    expect(s.round.roundNumber).toBe(2);
+    expect(s.submission.state).toBe(SubmissionState.ACCEPTED);
+    expect(s.submission.best.expression).toBe("75+50");
+  });
+
+  it("resumes into a result the client was offline for", () => {
+    const s = reducer(
+      createInitialState(),
+      srv("roomState", snapshot({
+        round: { roundNumber: 1, status: "COMPLETE" },
+        result: { roundNumber: 1, winnerId: "them", scores: { you: 0 }, matchComplete: false },
+      }))
+    );
+    expect(s.phase).toBe(Phase.ROUND_RESULT);
+    expect(s.result.winnerId).toBe("them");
+    // A completed round must not be restored as the live one, or the board
+    // comes back with a dead clock on it.
+    expect(s.round).toBeNull();
+  });
+
+  it("resumes into matchComplete when the match ended while away", () => {
+    const s = reducer(
+      createInitialState(),
+      srv("roomState", snapshot({
+        room: { ...room, status: "COMPLETED" },
+        result: { roundNumber: 3, matchComplete: true, matchWinnerId: "them", scores: { you: 1 } },
+      }))
+    );
+    expect(s.phase).toBe(Phase.MATCH_COMPLETE);
+  });
+
+  it("clears a stale error when the snapshot arrives", () => {
+    let s = reducer(createInitialState(), { type: "LOCAL_ERROR", error: { message: "Lost connection" } });
+    s = reducer(s, srv("roomState", snapshot()));
+    expect(s.error).toBeNull();
+  });
+
+  it("updates the roster when the opponent reconnects", () => {
+    const back = { ...room, players: [{ playerId: "them", ready: false, active: true }] };
+    let s = reducer(createInitialState(), srv("roomCreated", { playerId: "you", room, match: {} }));
+    s = reducer(s, srv("playerReconnected", { playerId: "them", room: back }));
+    expect(s.room.players[0].active).toBe(true);
+  });
 });

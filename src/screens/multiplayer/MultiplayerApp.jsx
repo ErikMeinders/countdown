@@ -167,13 +167,18 @@ export function MultiplayerApp({ initialJoinCode, createParams, onExit, createTr
         <div
           role="alert"
           style={{
+            // Top, not bottom: pinned to the bottom it landed on top of
+            // Cancel/Reset/Submit, half-covering the row it was reporting on.
+            // Up here it sits in the air the centred body leaves, clear of
+            // every control.
             position: "fixed",
             left: 0,
             right: 0,
-            bottom: `calc(12px + env(safe-area-inset-bottom))`,
+            top: `calc(56px + env(safe-area-inset-top))`,
             display: "flex",
             justifyContent: "center",
             padding: "0 12px",
+            zIndex: 5,
           }}
         >
           <div
@@ -197,7 +202,7 @@ export function MultiplayerApp({ initialJoinCode, createParams, onExit, createTr
               Connection lost. Reconnecting…
               <br />
               <span style={{ fontSize: 11, color: T.muted }}>
-                The room may not resume — see notes if this persists.
+                Your place in the room is kept.
               </span>
             </span>
             <button onClick={actions.reconnect} style={miniBtn(T)}>

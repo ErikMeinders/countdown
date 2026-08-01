@@ -131,11 +131,17 @@ opens the app straight into the join screen with the code pre-filled.
   from the cached app shell, but multiplayer *actions* need a connection and say
   so; the service worker never caches WebSocket traffic.
 - **Reconnection:** on a transient drop the client keeps the UI visible, shows a
-  reconnecting indicator, and retries with bounded backoff. **Full room-state
-  resumption is not supported yet** — the backend has no reconnect route or
-  room-snapshot response, so a reconnected socket can't re-bind to the existing
-  player. If reconnection doesn't recover, use **Try again** / **Leave**. This
-  is a documented backend/frontend protocol gap, not a client bug.
+  reconnecting indicator, and retries with bounded backoff. When the socket
+  comes back it re-announces itself on the `reconnect` route and the server
+  replies with a whole-room snapshot — the room, the live round with the
+  server's own clock, your best answer so far, and any result you were away
+  for — so play resumes where you left it. A snapshot rather than a replay,
+  because a client that missed two rounds can't be caught up by frames it never
+  received. If it still doesn't recover, use **Try again** / **Leave**.
+- **Not** resumed: a full page reload. The player ID lives in `sessionStorage`,
+  so the tab still has it, but rejoining automatically on load would race the
+  create/join the player may have intended instead. That wants a deliberate
+  "resume your room?" prompt.
 - **Deadline finalisation is lazy** on the backend, so a round where one player
   never answers is finalised on the next interaction; the client nudges this
   automatically at the deadline.

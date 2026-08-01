@@ -165,6 +165,87 @@ class GameService:
             exclude=player.player_id,
         )
 
+    def reconnect(self, request: Request) -> None:
+        """Rebind a returning player to a new socket and replay the room to them.
+
+        Keyed on the player ID the client was given at create/join and kept in
+        sessionStorage. That is deliberately not a secret — it is unguessable
+        enough that you would need the room code *and* a
+        random player ID to hijack a seat in a party game that expires within
+        the hour, and introducing a real token would mean persisting a
+        credential in the browser, which the client explicitly avoids.
+
+        The reply is a whole-room snapshot rather than a diff: a client that
+        was away for two rounds cannot be caught up by replaying events it
+        never received, and the phase it should resume in is derivable from
+        the snapshot alone.
+        """
+        code = require_str(request.payload, "roomCode", max_length=16).upper()
+        player_id = require_str(request.payload, "playerId", max_length=64)
+
+        room = self._require_membership(code, player_id)
+        if room.expires_at and room.expires_at < self._now_s():
+            raise DomainError(ErrorCode.ROOM_EXPIRED, "This room has expired.")
+
+        room = self._repo.reactivate_player(code, request.connection_id, player_id, self._expires_at())
+        log(logger, logging.INFO, "player reconnected", code=code)
+
+        self._send(request.connection_id, response("roomState", request.request_id, self._snapshot(room, player_id)))
+        self._broadcast(
+            code,
+            response("playerReconnected", None, {"playerId": player_id, "room": room.public_state()}),
+            exclude=player_id,
+        )
+
+    def _snapshot(self, room: Room, player_id: str) -> dict:
+        """Everything a returning client needs to resume, in one frame.
+
+        ``serverTime`` is included because every round deadline on the client is
+        computed against the server's clock; a phone that slept through a round
+        can be arbitrarily far out, and without a reference it would resume with
+        a timer that is confidently wrong.
+        """
+        snapshot = {
+            "playerId": player_id,
+            "match": self._match_config(room),
+            "room": room.public_state(),
+            "serverTime": self._clock_ms(),
+            "round": None,
+            "submission": None,
+            "result": None,
+        }
+
+        round_ = self._repo.get_round(room.code, room.current_round) if room.current_round else None
+        if round_ is None:
+            return snapshot
+
+        snapshot["round"] = round_.public_definition()
+        mine = self._repo.get_submission(room.code, round_.number, player_id)
+        if mine is not None:
+            snapshot["submission"] = mine.public_view()
+
+        if round_.status == RoundStatus.COMPLETE:
+            stored = self._repo.list_submissions(room.code, round_.number)
+            # Recompute rather than store: scoring is pure, and a stored copy
+            # would be a second source of truth for who won.
+            outcome = scoring.score_round(
+                [
+                    scoring.Submission(
+                        player_id=s.player_id,
+                        value=s.value,
+                        operations=s.operations,
+                        submitted_at=s.submitted_at,
+                        expression=s.expression,
+                    )
+                    for s in stored
+                ],
+                round_.target,
+            )
+            snapshot["result"] = self._round_result_payload(
+                room, round_, stored, winner_id=outcome.winner_id, is_tie=outcome.is_tie
+            )
+        return snapshot
+
     # ── Readiness and round start ──────────────────────────────────────────
 
     def ready(self, request: Request) -> None:
@@ -283,23 +364,41 @@ class GameService:
             return
         log(logger, logging.INFO, "round complete", code=room.code, round=round_.number)
 
-        match_winner = scoring.match_winner(updated.scores, updated.best_of)
-        payload = {
+        payload = self._round_result_payload(
+            updated, round_, stored, winner_id=outcome.winner_id, is_tie=outcome.is_tie
+        )
+        self._broadcast(room.code, response("roundResult", None, payload))
+
+    def _round_result_payload(
+        self,
+        room: Room,
+        round_: Round,
+        stored: list[StoredSubmission],
+        *,
+        winner_id: Optional[str],
+        is_tie: bool,
+    ) -> dict:
+        """The roundResult body.
+
+        Shared with :meth:`reconnect`, which has to hand a returning player the
+        result they were offline for — building it twice would let the live
+        broadcast and the resumed one drift apart.
+        """
+        return {
             "roomCode": room.code,
             "roundNumber": round_.number,
             "target": round_.target,
             "numbers": round_.numbers,
             "status": RoundStatus.COMPLETE.value,
-            "winnerId": outcome.winner_id,
-            "isTie": outcome.is_tie,
+            "winnerId": winner_id,
+            "isTie": is_tie,
             "submissions": [s.public_view() for s in stored],
-            "scores": dict(updated.scores),
-            "matchComplete": updated.status == RoomStatus.COMPLETED,
-            "matchWinnerId": match_winner,
+            "scores": dict(room.scores),
+            "matchComplete": room.status == RoomStatus.COMPLETED,
+            "matchWinnerId": scoring.match_winner(room.scores, room.best_of),
             # A future solver-generated "algorithmSolution" can be added here
             # without changing the shape of anything above.
         }
-        self._broadcast(room.code, response("roundResult", None, payload))
 
     # ── Next round ─────────────────────────────────────────────────────────
 

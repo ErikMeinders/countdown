@@ -225,6 +225,13 @@ Resources:
       RouteKey: joinRoom
       Target: !Sub 'integrations/${Integration}'
 
+  ReconnectRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref WebSocketApi
+      RouteKey: reconnect
+      Target: !Sub 'integrations/${Integration}'
+
   ReadyRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
@@ -270,6 +277,7 @@ Resources:
       - DefaultRoute
       - CreateRoomRoute
       - JoinRoomRoute
+      - ReconnectRoute
       - ReadyRoute
       - SubmitAnswerRoute
       - NextRoundRoute
