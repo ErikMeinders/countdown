@@ -4,6 +4,59 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning is
 [semantic](https://semver.org/).
 
+## [1.4.0] — 2026-08-01
+
+Multiplayer. Released as commit `e4e612d` on 2026-08-01, which reached the
+published site without a version bump or an entry here; this documents it.
+
+### Added
+
+- **"Play together"** — a server-backed room alongside the original game. One
+  player creates a room, others join by QR code or a four-character code,
+  everyone gets the *same* server-generated puzzle, solves independently, and
+  the results reveal together. Best of five.
+- A serverless backend in `backend/`: an API Gateway WebSocket API routed on
+  `$request.body.action`, one python3.13 Lambda (`app.handler` → `router` →
+  thin handlers → `GameService` → pure `domain/`), and a DynamoDB single table
+  with a `ConnectionIndex` GSI and TTL expiry. The template is
+  environment-parameterised, so `dev` and `prod` are independent stacks.
+  Deployed by `make deploy`, never by CI.
+- The server is authoritative: it generates the numbers and target, and it
+  computes the value of a submitted expression — `claimedResult` is ignored, so
+  no client animation can determine a result. Rounds run on the server's
+  wall-clock `startsAt`/`endsAt`, so two phones stay in step.
+- `src/services/protocol.js` — the wire contract as one module (actions,
+  message types, error codes, builders, defensive parsing), mirroring
+  `backend/src/protocol.py` and `backend/src/domain/errors.py`.
+- `src/state/multiplayerMachine.js` — a pure reducer for the room lifecycle,
+  free of React and of the socket, so server messages are the only way to move
+  between phases. `useMultiplayer` is the one React surface that holds a socket.
+- Hash-based deep links (`/#/join/ABCD`, `src/routing.js`), so a scanned QR
+  code opens straight into the join screen with no SPA fallback on the host.
+- Scored single-player sessions over N rounds with a running total, and a
+  shared colour-coded step carousel for results in both modes.
+- `?mock=1` in dev drives the whole multiplayer flow against a scripted
+  opponent with no backend. Never present in a production build.
+
+### Changed
+
+- `src/Shell.jsx` now chooses between the two modes. The single-player subtree
+  never mounts a socket, so a multiplayer or connectivity fault cannot reach
+  local play, which stays fully on-device and offline.
+- The multiplayer endpoint is the build-time `VITE_COUNTDOWN_WEBSOCKET_URL`.
+  With it unset the app still runs: "Play together" is disabled with an
+  explanation. There is no default endpoint, and no URL is committed — the
+  published site gets the prod URL from an Actions variable.
+
+### Known limitations
+
+- A dropped socket cannot re-bind to its player: the backend has no reconnect
+  route or room snapshot yet, so a client that doesn't recover must leave.
+- Round finalisation is lazy — with no scheduler, a round whose clock expires
+  before both players submit is finalised on the next interaction, which the
+  client nudges at the deadline.
+- Two players per room, and an exact tie awards nobody the round.
+
 ## [1.3.0] — 2026-07-25
 
 ### Added
