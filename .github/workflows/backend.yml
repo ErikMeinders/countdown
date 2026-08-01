@@ -1,0 +1,37 @@
+name: Backend tests
+
+# The backend is deployed by hand (`cd backend && make deploy`), so this is the
+# only automated check it gets. It runs on every push and pull request rather
+# than behind a `backend/**` path filter: the wire contract is duplicated across
+# two languages (src/services/protocol.js and backend/src/protocol.py), and a
+# job that skips itself is easy to mistake for a job that passed.
+#
+# No AWS credentials are needed or wanted — the domain and service layers are
+# tested against in-memory doubles.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      # Match the Lambda runtime in template.yaml, so a syntax or stdlib
+      # difference shows up here rather than after a deploy.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest
