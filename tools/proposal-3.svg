@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="-20%" r="150%">
+      <stop offset="0%"  stop-color="#5ce8da"/>
+      <stop offset="60%" stop-color="#2fc4b8"/>
+      <stop offset="100%" stop-color="#17a89a"/>
+    </radialGradient>
+    <filter id="badgeLift" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#06332e"
+                    flood-opacity="0.35"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <text x="256.0" y="200" fill="#08101a"
+        font-family="JetBrains Mono" font-weight="700"
+        font-size="76" text-anchor="middle"
+        dominant-baseline="central" letter-spacing="0.04em">COUNTDOWN</text>
+  <g filter="url(#badgeLift)">
+    <rect x="138.0" y="268.0" width="236.0" height="176.0"
+          rx="30.0" fill="#f2faf8"/>
+  </g>
+  <text x="256.0" y="358.0" fill="#17a89a"
+        font-family="JetBrains Mono" font-weight="700"
+        font-size="108" text-anchor="middle"
+        dominant-baseline="central">952</text>
+</svg>

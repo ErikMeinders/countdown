@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="-12%" r="145%">
+      <stop offset="0%"  stop-color="#18233c"/>
+      <stop offset="45%" stop-color="#0c1220"/>
+      <stop offset="100%" stop-color="#080a12"/>
+    </radialGradient>
+    <radialGradient id="halo" cx="50%" cy="42%" r="46%">
+      <stop offset="0%"  stop-color="#43ddcd" stop-opacity="0.34"/>
+      <stop offset="100%" stop-color="#43ddcd" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="bevel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="rgba(255,255,255,0.12)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0)"/>
+    </linearGradient>
+    <linearGradient id="lip" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"  stop-color="rgba(6,9,16,0.85)"/>
+      <stop offset="22%" stop-color="rgba(6,9,16,0)"/>
+      <stop offset="78%" stop-color="rgba(6,9,16,0)"/>
+      <stop offset="100%" stop-color="rgba(6,9,16,0.85)"/>
+    </linearGradient>
+    <filter id="lift" x="-30%" y="-30%" width="160%" height="160%">
+  <feDropShadow dx="0" dy="5" stdDeviation="9" flood-color="#000000" flood-opacity="0.7"/>
+</filter>
+    <filter id="bloom" x="-70%" y="-70%" width="240%" height="240%">
+  <feGaussianBlur in="SourceAlpha" stdDeviation="10" result="b"/>
+  <feFlood flood-color="#5ce8da" flood-opacity="0.62"/>
+  <feComposite in2="b" operator="in" result="glow"/>
+  <feMerge>
+    <feMergeNode in="glow"/>
+    <feMergeNode in="SourceGraphic"/>
+  </feMerge>
+</filter>
+  </defs>
+  <rect width="512" height="512" fill="url(#bg)"/>
+  <ellipse cx="256.0" cy="256.0"
+           rx="313.3" ry="131.6" fill="url(#halo)"/>
+  
+    <g>
+      <rect x="15.0" y="162.0" width="150.0" height="188.0"
+            rx="18.0" fill="#000206" filter="url(#lift)"/>
+      <rect x="17.0" y="164.0"
+            width="146.0" height="184.0"
+            rx="16.0" fill="none"
+            stroke="rgba(255,255,255,0.40)" stroke-width="4.00"/>
+      <rect x="17.0" y="164.0"
+            width="146.0" height="94.0"
+            rx="16.0" fill="url(#bevel)"/>
+      <text x="90.0" y="258.0" fill="#5ce8da"
+            font-family="JetBrains Mono" font-weight="700"
+            font-size="150" text-anchor="middle"
+            dominant-baseline="central" filter="url(#bloom)">9</text>
+      <rect x="15.0" y="162.0" width="150.0" height="188.0"
+            rx="18.0" fill="url(#lip)"/>
+    </g>
+    <g>
+      <rect x="181.0" y="162.0" width="150.0" height="188.0"
+            rx="18.0" fill="#000206" filter="url(#lift)"/>
+      <rect x="183.0" y="164.0"
+            width="146.0" height="184.0"
+            rx="16.0" fill="none"
+            stroke="rgba(255,255,255,0.40)" stroke-width="4.00"/>
+      <rect x="183.0" y="164.0"
+            width="146.0" height="94.0"
+            rx="16.0" fill="url(#bevel)"/>
+      <text x="256.0" y="258.0" fill="#5ce8da"
+            font-family="JetBrains Mono" font-weight="700"
+            font-size="150" text-anchor="middle"
+            dominant-baseline="central" filter="url(#bloom)">5</text>
+      <rect x="181.0" y="162.0" width="150.0" height="188.0"
+            rx="18.0" fill="url(#lip)"/>
+    </g>
+    <g>
+      <rect x="347.0" y="162.0" width="150.0" height="188.0"
+            rx="18.0" fill="#000206" filter="url(#lift)"/>
+      <rect x="349.0" y="164.0"
+            width="146.0" height="184.0"
+            rx="16.0" fill="none"
+            stroke="rgba(255,255,255,0.40)" stroke-width="4.00"/>
+      <rect x="349.0" y="164.0"
+            width="146.0" height="94.0"
+            rx="16.0" fill="url(#bevel)"/>
+      <text x="422.0" y="258.0" fill="#5ce8da"
+            font-family="JetBrains Mono" font-weight="700"
+            font-size="150" text-anchor="middle"
+            dominant-baseline="central" filter="url(#bloom)">2</text>
+      <rect x="347.0" y="162.0" width="150.0" height="188.0"
+            rx="18.0" fill="url(#lip)"/>
+    </g>
+</svg>
